@@ -1,0 +1,423 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: dashboard
+    description: Dashboard summary operations
+  - name: alerts
+    description: Security alert queue operations
+  - name: patterns
+    description: Attack pattern detection operations
+  - name: bugscan
+    description: AI bug scanner pipeline operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary metrics
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /alerts:
+    get:
+      operationId: listAlerts
+      tags: [alerts]
+      summary: List alerts in the queue
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/AlertStatus"
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
+  /alerts/{id}:
+    get:
+      operationId: getAlert
+      tags: [alerts]
+      summary: Get a single alert
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Alert detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateAlertStatus
+      tags: [alerts]
+      summary: Update an alert's status (triage decision)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlertStatusUpdate"
+      responses:
+        "200":
+          description: Updated alert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Alert"
+        "404":
+          description: Not found
+
+  /alerts/simulate:
+    post:
+      operationId: simulateAlerts
+      tags: [alerts]
+      summary: Simulate a batch of incoming security alerts
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SimulateAlertsInput"
+      responses:
+        "201":
+          description: Newly generated alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
+  /patterns:
+    get:
+      operationId: listPatterns
+      tags: [patterns]
+      summary: List detected attack patterns/campaigns aggregated from alerts
+      responses:
+        "200":
+          description: List of patterns
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttackPattern"
+
+  /bugscan:
+    post:
+      operationId: runBugScan
+      tags: [bugscan]
+      summary: Run the 3-agent bug scanning pipeline (Analyzer, Detector, Debunker)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BugScanInput"
+      responses:
+        "200":
+          description: Bug scan result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BugScanResult"
+
+  /bugscan/history:
+    get:
+      operationId: listBugScans
+      tags: [bugscan]
+      summary: List recent bug scan history
+      responses:
+        "200":
+          description: List of past bug scans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BugScanSummary"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    AlertStatus:
+      type: string
+      enum: [pending, true_positive, false_positive, resolved]
+
+    AlertSeverity:
+      type: string
+      enum: [low, medium, high, critical]
+
+    Alert:
+      type: object
+      required:
+        - id
+        - alertId
+        - title
+        - description
+        - source
+        - severity
+        - status
+        - confidence
+        - assetName
+        - createdAt
+      properties:
+        id:
+          type: integer
+        alertId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        source:
+          type: string
+        severity:
+          $ref: "#/components/schemas/AlertSeverity"
+        status:
+          $ref: "#/components/schemas/AlertStatus"
+        confidence:
+          type: number
+        assetName:
+          type: string
+        mitreTactic:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    AlertStatusUpdate:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: "#/components/schemas/AlertStatus"
+
+    SimulateAlertsInput:
+      type: object
+      properties:
+        count:
+          type: integer
+          minimum: 1
+          maximum: 20
+
+    AttackPattern:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - alertCount
+        - severity
+        - mitreTactic
+        - firstSeen
+        - lastSeen
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        alertCount:
+          type: integer
+        severity:
+          $ref: "#/components/schemas/AlertSeverity"
+        mitreTactic:
+          type: string
+        firstSeen:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+
+    DashboardSummary:
+      type: object
+      required:
+        - alertsProcessed24h
+        - noiseReductionPct
+        - avgTriageSeconds
+        - openAlerts
+        - autoResolvedPct
+        - severityBreakdown
+        - recentAlerts
+      properties:
+        alertsProcessed24h:
+          type: integer
+        noiseReductionPct:
+          type: number
+        avgTriageSeconds:
+          type: number
+        openAlerts:
+          type: integer
+        autoResolvedPct:
+          type: number
+        severityBreakdown:
+          type: object
+          required: [low, medium, high, critical]
+          properties:
+            low:
+              type: integer
+            medium:
+              type: integer
+            high:
+              type: integer
+            critical:
+              type: integer
+        recentAlerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Alert"
+
+    BugScanInput:
+      type: object
+      required:
+        - language
+      properties:
+        code:
+          type: string
+        githubUrl:
+          type: string
+        language:
+          type: string
+
+    BugScanFinding:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - severity
+        - line
+        - confirmed
+        - recommendation
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        severity:
+          $ref: "#/components/schemas/AlertSeverity"
+        line:
+          type: ["integer", "null"]
+        confirmed:
+          type: boolean
+        recommendation:
+          type: string
+
+    BugScanResult:
+      type: object
+      required:
+        - id
+        - language
+        - status
+        - analyzerNotes
+        - detectorFindings
+        - confirmedFindings
+        - debunkedCount
+        - createdAt
+      properties:
+        id:
+          type: integer
+        language:
+          type: string
+        status:
+          type: string
+        analyzerNotes:
+          type: string
+        detectorFindings:
+          type: array
+          items:
+            $ref: "#/components/schemas/BugScanFinding"
+        confirmedFindings:
+          type: array
+          items:
+            $ref: "#/components/schemas/BugScanFinding"
+        debunkedCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    BugScanSummary:
+      type: object
+      required:
+        - id
+        - language
+        - confirmedCount
+        - debunkedCount
+        - createdAt
+      properties:
+        id:
+          type: integer
+        language:
+          type: string
+        confirmedCount:
+          type: integer
+        debunkedCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
