@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Shield, Activity, List, Play, Bug, Network, ArrowLeft } from "lucide-react";
+import { AnimatedBackground } from "@/components/AnimatedBackground";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Alerts from "@/pages/alerts";
@@ -25,10 +26,12 @@ function Layout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row dark">
+    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row dark scanline-overlay">
+      {/* Animated particle-network background (unicorn.studio-style) */}
+      <AnimatedBackground />
       {/* ── Sidebar ────────────────────────────────────────────── */}
       <aside
-        className="w-full md:w-64 border-r border-border flex flex-col shrink-0"
+        className="w-full md:w-64 border-r border-border flex flex-col shrink-0 relative z-10"
         style={{
           background: "linear-gradient(180deg, hsl(228 38% 7%) 0%, hsl(228 35% 6%) 100%)",
         }}
@@ -131,7 +134,7 @@ function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* ── Main Content ───────────────────────────────────────── */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto relative z-10">
         <div className="p-8 flex-1">
           {children}
         </div>

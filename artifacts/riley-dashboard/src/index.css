@@ -120,6 +120,30 @@
 }
 
 /* ============================================================
+   SCANLINE / CRT OVERLAY
+   Applied as a ::before pseudo-element on the layout root
+   ============================================================ */
+@layer utilities {
+  .scanline-overlay {
+    position: relative;
+  }
+  .scanline-overlay::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.06) 2px,
+      rgba(0, 0, 0, 0.06) 4px
+    );
+    pointer-events: none;
+    z-index: 9998;
+  }
+}
+
+/* ============================================================
    GRADIENT PROGRESS BARS
    Use these inline via className on the fill element
    ============================================================ */
