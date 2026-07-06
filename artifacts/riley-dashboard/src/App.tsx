@@ -55,7 +55,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="p-4 border-t border-border space-y-3">
           <a
-            href="/"
+            href="https://riley-frontend-psi.vercel.app"
             className="flex items-center gap-2 px-4 py-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
