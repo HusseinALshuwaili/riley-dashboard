@@ -31,7 +31,7 @@ export default function Simulate() {
             title: "Simulation Failed",
             description: "An error occurred while generating alerts.",
           });
-        }
+        },
       }
     );
   };
@@ -39,50 +39,97 @@ export default function Simulate() {
   return (
     <div className="max-w-2xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-mono font-bold tracking-tight text-foreground uppercase">SIMULATION ENGINE</h1>
-        <p className="text-muted-foreground font-mono mt-2">INJECT SYNTHETIC THREAT DATA FOR LIVE DEMONSTRATION</p>
+        <h1 className="text-3xl font-mono font-bold tracking-tight text-foreground uppercase">
+          SIMULATION ENGINE
+        </h1>
+        <p className="text-muted-foreground font-mono mt-2 text-sm">
+          INJECT SYNTHETIC THREAT DATA FOR LIVE DEMONSTRATION
+        </p>
       </div>
 
-      <Card className="bg-card border-border rounded-none border-l-4 border-l-primary">
-        <CardHeader>
-          <CardTitle className="font-mono text-lg">TRAFFIC INJECTION</CardTitle>
-          <CardDescription className="font-mono text-muted-foreground">
+      <Card
+        className="border-border"
+        style={{
+          borderTop: "2px solid hsl(172, 100%, 42%)",
+          boxShadow: "0 0 40px hsl(172 100% 42% / 0.05), 0 4px 24px rgba(0,0,0,0.5)",
+        }}
+      >
+        <CardHeader className="border-b border-border pb-5">
+          <CardTitle className="font-mono text-lg flex items-center gap-2">
+            <div
+              className="p-1.5 rounded-md"
+              style={{ background: "hsl(172 100% 42% / 0.12)" }}
+            >
+              <Play className="w-4 h-4 text-primary" />
+            </div>
+            TRAFFIC INJECTION
+          </CardTitle>
+          <CardDescription className="font-mono text-muted-foreground text-sm">
             Generate synthetic alerts imitating attacks across various vectors (brute force, SQLi, malware beacons).
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-8">
+        <CardContent className="p-6 space-y-8">
+
+          {/* Payload Volume */}
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <label className="font-mono text-sm text-foreground">PAYLOAD VOLUME</label>
-              <span className="font-mono text-primary text-xl font-bold">{count[0]} ALERTS</span>
+              <label className="font-mono text-sm text-foreground tracking-wider">PAYLOAD VOLUME</label>
+              <span
+                className="font-mono text-xl font-bold"
+                style={{ color: "hsl(172, 100%, 48%)", textShadow: "0 0 10px hsl(172 100% 44% / 0.4)" }}
+              >
+                {count[0]} ALERTS
+              </span>
             </div>
-            <Slider 
-              value={count} 
-              onValueChange={setCount} 
-              min={1} 
-              max={20} 
+            <Slider
+              value={count}
+              onValueChange={setCount}
+              min={1}
+              max={20}
               step={1}
               className="py-4"
             />
+            <div className="flex justify-between text-xs font-mono text-muted-foreground">
+              <span>1</span>
+              <span>10</span>
+              <span>20</span>
+            </div>
           </div>
 
-          <div className="bg-secondary/50 p-4 border border-border flex items-start gap-4">
-            <AlertTriangle className="text-orange-500 shrink-0 mt-1" />
+          {/* Warning */}
+          <div
+            className="p-4 border rounded-lg flex items-start gap-4"
+            style={{
+              borderColor: "hsl(25, 90%, 55% / 0.4)",
+              background: "hsl(25, 90%, 55% / 0.05)",
+            }}
+          >
+            <AlertTriangle className="text-orange-400 shrink-0 mt-0.5 h-5 w-5" />
             <div className="font-mono text-sm text-muted-foreground">
-              <p className="text-foreground mb-1">WARNING: LIVE ENVIRONMENT</p>
+              <p className="text-orange-400 mb-1 font-medium tracking-wider">WARNING: LIVE ENVIRONMENT</p>
               Injected alerts will be processed by RILEY's triage engine immediately. This will affect dashboard metrics and trigger automation workflows.
             </div>
           </div>
 
-          <Button 
-            className="w-full rounded-none font-mono py-6 text-lg tracking-widest bg-primary text-black hover:bg-primary/90"
+          {/* Execute */}
+          <Button
+            className="w-full font-mono py-6 text-base tracking-widest transition-all"
             onClick={handleSimulate}
             disabled={simulate.isPending}
+            style={{
+              background: simulate.isPending
+                ? "hsl(172, 60%, 25%)"
+                : "linear-gradient(135deg, hsl(172, 100%, 32%) 0%, hsl(172, 100%, 44%) 100%)",
+              color: "#000",
+              boxShadow: simulate.isPending
+                ? "none"
+                : "0 0 24px hsl(172 100% 42% / 0.3)",
+            }}
           >
             {simulate.isPending ? (
-              <Loader2 className="w-6 h-6 animate-spin mr-2" />
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
             ) : (
-              <Play className="w-6 h-6 mr-2" fill="currentColor" />
+              <Play className="w-5 h-5 mr-2" fill="currentColor" />
             )}
             {simulate.isPending ? "INJECTING PAYLOAD..." : "EXECUTE INJECTION"}
           </Button>

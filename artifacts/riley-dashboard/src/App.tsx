@@ -26,48 +26,111 @@ function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row dark">
-      {/* Sidebar */}
-      <aside className="w-full md:w-64 border-r border-border bg-card flex flex-col shrink-0">
-        <div className="p-6 border-b border-border flex items-center gap-3">
-          <Shield className="w-8 h-8 text-primary" />
+      {/* ── Sidebar ────────────────────────────────────────────── */}
+      <aside
+        className="w-full md:w-64 border-r border-border flex flex-col shrink-0"
+        style={{
+          background: "linear-gradient(180deg, hsl(228 38% 7%) 0%, hsl(228 35% 6%) 100%)",
+        }}
+      >
+        {/* Logo / Header */}
+        <div
+          className="p-6 border-b border-border flex items-center gap-3"
+          style={{
+            background: "linear-gradient(135deg, hsl(228 45% 9%) 0%, hsl(228 38% 7%) 100%)",
+          }}
+        >
+          <div
+            className="flex items-center justify-center w-9 h-9 rounded-lg"
+            style={{
+              background: "linear-gradient(135deg, hsl(172 100% 20%) 0%, hsl(172 100% 32%) 100%)",
+              boxShadow: "0 0 16px hsl(172 100% 42% / 0.3)",
+            }}
+          >
+            <Shield className="w-5 h-5 text-primary" />
+          </div>
           <div>
-            <h1 className="font-mono text-xl font-bold tracking-wider text-primary">RILEY</h1>
+            <h1
+              className="font-mono text-xl font-bold tracking-wider"
+              style={{
+                background: "linear-gradient(90deg, hsl(172, 100%, 52%), hsl(192, 100%, 60%))",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              RILEY
+            </h1>
             <div className="flex items-center gap-2 mt-1">
-              <span className="relative flex h-2 w-2">
+              <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
               </span>
-              <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">AGENT ONLINE</span>
+              <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">
+                AGENT ONLINE
+              </span>
             </div>
           </div>
         </div>
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+
+        {/* Nav */}
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location === item.href;
             return (
-              <Link key={item.href} href={item.href} className={`flex items-center gap-3 px-4 py-3 text-sm font-mono transition-colors ${isActive ? "bg-primary/10 text-primary border-l-2 border-primary" : "text-muted-foreground hover:bg-secondary hover:text-foreground border-l-2 border-transparent"}`}>
-                <Icon className="w-4 h-4" />
+              <Link
+                key={item.href}
+                href={item.href}
+                className={[
+                  "flex items-center gap-3 px-4 py-3 text-sm font-mono transition-all duration-200 rounded-lg",
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground",
+                ].join(" ")}
+                style={
+                  isActive
+                    ? {
+                        background:
+                          "linear-gradient(90deg, hsl(172 100% 42% / 0.12) 0%, transparent 100%)",
+                        borderLeft: "2px solid hsl(172, 100%, 42%)",
+                        paddingLeft: "14px",
+                        boxShadow: "0 0 20px hsl(172 100% 42% / 0.07)",
+                      }
+                    : {
+                        borderLeft: "2px solid transparent",
+                      }
+                }
+              >
+                <Icon
+                  className="w-4 h-4 shrink-0"
+                  style={isActive ? { filter: "drop-shadow(0 0 4px hsl(172, 100%, 42%))" } : {}}
+                />
                 {item.label}
               </Link>
             );
           })}
         </nav>
-        <div className="p-4 border-t border-border space-y-3">
+
+        {/* Bottom section */}
+        <div
+          className="p-4 border-t border-border space-y-3"
+          style={{ background: "hsl(228 38% 6% / 0.8)" }}
+        >
           <a
             href="https://riley-frontend-psi.vercel.app"
-            className="flex items-center gap-2 px-4 py-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             BACK TO HOME
           </a>
-          <p className="px-4 text-[10px] font-mono text-muted-foreground/60 tracking-wider">
+          <p className="px-4 text-[9px] font-mono text-muted-foreground/50 tracking-wider">
             v1.0.0 · Riley Security
           </p>
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* ── Main Content ───────────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         <div className="p-8 flex-1">
           {children}
