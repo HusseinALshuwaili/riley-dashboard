@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Shield, Activity, List, Play, Bug, Network, ArrowLeft } from "lucide-react";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { RileyChat } from "@/components/RileyChat";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Alerts from "@/pages/alerts";
@@ -143,18 +144,33 @@ function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+const PAGE_NAMES: Record<string, string> = {
+  "/": "Dashboard",
+  "/alerts": "Alert Queue",
+  "/simulate": "Simulate",
+  "/patterns": "Patterns",
+  "/bugscan": "Bug Scanner",
+};
+
 function Router() {
+  const [location] = useLocation();
+  const currentPage = PAGE_NAMES[location] ?? "Dashboard";
+
   return (
-    <Layout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/alerts" component={Alerts} />
-        <Route path="/simulate" component={Simulate} />
-        <Route path="/patterns" component={Patterns} />
-        <Route path="/bugscan" component={BugScan} />
-        <Route component={NotFound} />
-      </Switch>
-    </Layout>
+    <>
+      <Layout>
+        <Switch>
+          <Route path="/" component={Dashboard} />
+          <Route path="/alerts" component={Alerts} />
+          <Route path="/simulate" component={Simulate} />
+          <Route path="/patterns" component={Patterns} />
+          <Route path="/bugscan" component={BugScan} />
+          <Route component={NotFound} />
+        </Switch>
+      </Layout>
+      {/* RILEY AI Agent — floating chat panel */}
+      <RileyChat currentPage={currentPage} />
+    </>
   );
 }
 

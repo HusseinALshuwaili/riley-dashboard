@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, desc, ilike, or, and, type SQL } from "drizzle-orm";
+import { eq, desc, ilike, or, and, inArray, type SQL } from "drizzle-orm";
 import { db, alertsTable } from "@workspace/db";
 import {
   ListAlertsQueryParams,
@@ -11,6 +11,8 @@ import {
   UpdateAlertStatusResponse,
   SimulateAlertsBody,
   SimulateAlertsResponse,
+  BulkUpdateAlertsBody,
+  BulkUpdateAlertsResponse,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -167,6 +169,24 @@ router.patch("/alerts/:id", async (req, res): Promise<void> => {
   }
 
   res.json(UpdateAlertStatusResponse.parse(alert));
+});
+
+router.patch("/alerts/bulk", async (req, res): Promise<void> => {
+  const parsed = BulkUpdateAlertsBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const { ids, status } = parsed.data;
+
+  await db
+    .update(alertsTable)
+    .set({ status })
+    .where(inArray(alertsTable.id, ids));
+
+  req.log.info({ count: ids.length, status }, "Bulk updated alerts");
+  res.json(BulkUpdateAlertsResponse.parse({ updatedCount: ids.length, status }));
 });
 
 export default router;
