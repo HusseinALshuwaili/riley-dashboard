@@ -2,7 +2,7 @@ import { Switch, Route, Router as WouterRouter, Link, useLocation } from "wouter
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Shield, Activity, List, Play, Bug, Network, Radar, ArrowLeft } from "lucide-react";
+import { Shield, Activity, List, Play, Bug, Network, Radar, Globe, ArrowLeft } from "lucide-react";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { RileyChat } from "@/components/RileyChat";
 import NotFound from "@/pages/not-found";
@@ -12,6 +12,7 @@ import Simulate from "@/pages/simulate";
 import Patterns from "@/pages/patterns";
 import BugScan from "@/pages/bugscan";
 import Recon from "@/pages/recon";
+import ThreatMap from "@/pages/threat-map";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ function Layout({ children }: { children: React.ReactNode }) {
     { href: "/patterns", label: "Patterns", icon: Network },
     { href: "/bugscan", label: "Bug Scanner", icon: Bug },
     { href: "/recon", label: "Recon Agent", icon: Radar },
+    { href: "/threat-map", label: "Threat Globe", icon: Globe },
   ];
 
   return (
@@ -153,6 +155,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/patterns": "Patterns",
   "/bugscan": "Bug Scanner",
   "/recon": "Recon Agent",
+  "/threat-map": "Threat Globe",
 };
 
 function Router() {
@@ -169,6 +172,7 @@ function Router() {
           <Route path="/patterns" component={Patterns} />
           <Route path="/bugscan" component={BugScan} />
           <Route path="/recon" component={Recon} />
+          <Route path="/threat-map" component={ThreatMap} />
           <Route component={NotFound} />
         </Switch>
       </Layout>
