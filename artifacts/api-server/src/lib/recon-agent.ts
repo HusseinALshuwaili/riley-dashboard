@@ -13,6 +13,7 @@
  */
 
 import EventEmitter from "events";
+import { spawn } from "child_process";
 import { db, reconScansTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
@@ -358,6 +359,103 @@ async function queryIpInfo(ip: string): Promise<OsintToolResult> {
 }
 
 // ---------------------------------------------------------------------------
+// Python OSINT CLI integration (riley-recon)
+// ---------------------------------------------------------------------------
+
+interface PythonToolResult {
+  tool: string;
+  module: string;
+  status: "ok" | "error" | "skipped";
+  data?: Record<string, unknown>;
+  error?: string;
+}
+
+interface PythonReconReport {
+  tool_results: PythonToolResult[];
+  duration_ms?: number;
+  error?: string;
+}
+
+// Modules to pass to riley-recon per target type.
+// "threat" module is intentionally excluded — handled by the TS Groq pipeline.
+function pythonModulesForType(targetType: TargetType): string | null {
+  switch (targetType) {
+    case "ip":     return "dns,tech";
+    case "domain": return "dns,domain,tech,breach";
+    case "url":    return "dns,domain,tech";
+    case "hash":   return null; // no useful Python modules for file hashes
+    default:       return null;
+  }
+}
+
+// Expected tool names per module set — used to populate osint_start before run.
+function pythonToolNamesForModules(modules: string): string[] {
+  const names: string[] = [];
+  if (modules.includes("dns"))    names.push("DNS Records");
+  if (modules.includes("domain")) names.push("crt.sh", "Wayback Machine");
+  if (modules.includes("tech"))   names.push("HTTP Tech Fingerprint");
+  if (modules.includes("breach")) names.push("HIBP");
+  if (modules.includes("email"))  names.push("Email MX Check");
+  if (modules.includes("social")) names.push("Username Presence");
+  return names;
+}
+
+/**
+ * Spawn the riley-recon CLI and return its tool results as OsintToolResult[].
+ * Gracefully returns [] if the CLI is not installed or errors out.
+ */
+async function runPythonOsint(
+  target: string,
+  targetType: TargetType
+): Promise<OsintToolResult[]> {
+  const modules = pythonModulesForType(targetType);
+  if (!modules) return [];
+
+  const execPath = process.env.RILEY_RECON_PATH ?? "riley-recon";
+
+  return new Promise<OsintToolResult[]>((resolve) => {
+    let stdout = "";
+    let stderr = "";
+
+    const proc = spawn(
+      execPath,
+      ["scan", target, "--json", "--no-ai", "--modules", modules],
+      { timeout: 60000 }
+    );
+
+    proc.stdout.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
+    proc.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString(); });
+
+    proc.on("error", (err) => {
+      // CLI not installed or not in PATH — graceful fallback
+      console.warn(`[recon] riley-recon unavailable: ${err.message}`);
+      resolve([]);
+    });
+
+    proc.on("close", (code) => {
+      if (code !== 0 || !stdout.trim()) {
+        console.warn(`[recon] riley-recon exited ${code ?? "null"}. stderr: ${stderr.slice(0, 200)}`);
+        resolve([]);
+        return;
+      }
+      try {
+        const report = JSON.parse(stdout) as PythonReconReport;
+        const results: OsintToolResult[] = (report.tool_results ?? []).map((r) => ({
+          tool: r.tool,
+          status: r.status,
+          data: r.data,
+          error: r.error,
+        }));
+        resolve(results);
+      } catch {
+        console.warn("[recon] Failed to parse riley-recon JSON output");
+        resolve([]);
+      }
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
 // OSINT orchestrator — runs tools in parallel based on target type
 // ---------------------------------------------------------------------------
 
@@ -366,20 +464,30 @@ export async function runOsintTools(
   targetType: TargetType,
   emit: (event: ReconLogEvent) => void
 ): Promise<OsintToolResult[]> {
-  // Determine which tools apply
-  const toolsForType: Record<TargetType, string[]> = {
-    ip: ["VirusTotal", "AbuseIPDB", "Shodan", "AlienVault OTX", "GreyNoise", "ipinfo.io"],
+  // TypeScript tool names per target type
+  const tsToolNames: Record<TargetType, string[]> = {
+    ip:     ["VirusTotal", "AbuseIPDB", "Shodan", "AlienVault OTX", "GreyNoise", "ipinfo.io"],
     domain: ["VirusTotal", "AlienVault OTX", "ipinfo.io"],
-    hash: ["VirusTotal", "AlienVault OTX"],
-    url: ["VirusTotal"],
+    hash:   ["VirusTotal", "AlienVault OTX"],
+    url:    ["VirusTotal"],
   };
 
-  emit({ type: "osint_start", tools: toolsForType[targetType], target, targetType });
+  // Python tool names expected for this target type
+  const pyModules = pythonModulesForType(targetType);
+  const pyToolNames = pyModules ? pythonToolNamesForModules(pyModules) : [];
 
-  const promises: Promise<OsintToolResult>[] = [];
+  emit({
+    type: "osint_start",
+    tools: [...tsToolNames[targetType], ...pyToolNames],
+    target,
+    targetType,
+  });
+
+  // Build TS OSINT promises
+  const tsPromises: Promise<OsintToolResult>[] = [];
 
   if (targetType === "ip") {
-    promises.push(
+    tsPromises.push(
       queryVirusTotal(target, targetType),
       queryAbuseIPDB(target),
       queryShodan(target),
@@ -388,33 +496,43 @@ export async function runOsintTools(
       queryIpInfo(target)
     );
   } else if (targetType === "domain") {
-    promises.push(
+    tsPromises.push(
       queryVirusTotal(target, targetType),
       queryOTX(target, targetType),
       queryIpInfo(target)
     );
   } else if (targetType === "hash") {
-    promises.push(
+    tsPromises.push(
       queryVirusTotal(target, targetType),
       queryOTX(target, targetType)
     );
   } else {
-    promises.push(queryVirusTotal(target, targetType));
+    tsPromises.push(queryVirusTotal(target, targetType));
   }
 
-  const results = await Promise.allSettled(promises);
+  // Run TS tools and Python CLI in parallel
+  const [tsSettled, pyResults] = await Promise.all([
+    Promise.allSettled(tsPromises),
+    runPythonOsint(target, targetType),
+  ]);
 
-  return results.map((r, i) => {
-    let result: OsintToolResult;
-    if (r.status === "fulfilled") {
-      result = r.value;
-    } else {
-      const toolName = toolsForType[targetType][i] ?? "Unknown";
-      result = { tool: toolName, status: "error", error: String(r.reason) };
-    }
+  // Emit + collect TS results
+  const allResults: OsintToolResult[] = tsSettled.map((r, i) => {
+    const result: OsintToolResult =
+      r.status === "fulfilled"
+        ? r.value
+        : { tool: tsToolNames[targetType][i] ?? "Unknown", status: "error", error: String(r.reason) };
     emit({ type: "osint_result", tool: result.tool, toolStatus: result.status });
     return result;
   });
+
+  // Emit + collect Python results
+  for (const pyResult of pyResults) {
+    emit({ type: "osint_result", tool: pyResult.tool, toolStatus: pyResult.status });
+    allResults.push(pyResult);
+  }
+
+  return allResults;
 }
 
 // ---------------------------------------------------------------------------
