@@ -91,3 +91,58 @@ export const BulkUpdateAlertsResponse = zod.object({
   updatedCount: zod.number(),
   status: zod.enum(["pending", "true_positive", "false_positive", "resolved"]),
 });
+
+// ---- Tier 1 Autonomous SOC Agent ----
+
+export const Tier1RunResponse = zod.object({
+  runId: zod.number(),
+});
+
+export const Tier1AgentStatus = zod.object({
+  status: zod.enum(["idle", "running"]),
+  nextRunAt: zod.string().optional(),
+  activeRunId: zod.number().nullable(),
+});
+
+export const Tier1RunSummary = zod.object({
+  id: zod.number(),
+  status: zod.enum(["running", "completed", "failed"]),
+  alertsProcessed: zod.number(),
+  truePositives: zod.number(),
+  falsePositives: zod.number(),
+  skipped: zod.number(),
+  durationMs: zod.number().nullable(),
+  errorMessage: zod.string().nullable(),
+  startedAt: zod.string(),
+  completedAt: zod.string().nullable(),
+});
+
+export const ListTier1RunsResponse = zod.object({
+  runs: zod.array(Tier1RunSummary),
+});
+
+export const IncidentSummary = zod.object({
+  id: zod.number(),
+  alertId: zod.number(),
+  agentRunId: zod.number(),
+  severity: zod.string(),
+  title: zod.string(),
+  threatSummary: zod.string(),
+  affectedAsset: zod.string(),
+  mitreTactic: zod.string().nullable(),
+  confidence: zod.number(),
+  incidentRef: zod.string(),
+  createdAt: zod.string(),
+});
+
+export const IncidentDetail = IncidentSummary.extend({
+  attackVector: zod.string(),
+  potentialImpact: zod.string(),
+  correlationNotes: zod.string(),
+  analystRationale: zod.string(),
+  remediationRunbook: zod.string(),
+});
+
+export const ListIncidentsResponse = zod.object({
+  incidents: zod.array(IncidentSummary),
+});

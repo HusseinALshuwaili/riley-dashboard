@@ -16,6 +16,7 @@ import EventEmitter from "events";
 import { spawn } from "child_process";
 import { db, reconScansTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { callGroq, fetchWithTimeout } from "./agents/runtime";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -96,20 +97,6 @@ export function detectTargetType(target: string): TargetType {
 // ---------------------------------------------------------------------------
 
 const TIMEOUT_MS = 12000;
-
-async function fetchWithTimeout(
-  url: string,
-  options: RequestInit = {},
-  timeoutMs = TIMEOUT_MS
-): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, { ...options, signal: controller.signal });
-  } finally {
-    clearTimeout(timer);
-  }
-}
 
 // --- VirusTotal v3 ---
 async function queryVirusTotal(
@@ -348,6 +335,7 @@ async function queryIpInfo(ip: string): Promise<OsintToolResult> {
         city: json.city,
         region: json.region,
         country: json.country,
+        loc: json.loc, // "lat,lng" string — used by threat map
         org: json.org,
         timezone: json.timezone,
         bogon: json.bogon ?? false,
@@ -538,41 +526,6 @@ export async function runOsintTools(
 // ---------------------------------------------------------------------------
 // Groq LLM calls
 // ---------------------------------------------------------------------------
-
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.3-70b-versatile";
-
-async function callGroq(systemPrompt: string, userContent: string): Promise<string> {
-  const key = process.env.GROQ_API_KEY;
-  if (!key) throw new Error("GROQ_API_KEY not configured");
-
-  const res = await fetchWithTimeout(
-    GROQ_API_URL,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userContent },
-        ],
-        temperature: 0.3,
-        max_tokens: 1024,
-        response_format: { type: "json_object" },
-      }),
-    },
-    30000
-  );
-
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Groq API error ${res.status}: ${body.slice(0, 300)}`);
-  }
-
-  const json = await res.json() as { choices: Array<{ message: { content: string } }> };
-  return json.choices[0]?.message?.content ?? "{}";
-}
 
 // ---------------------------------------------------------------------------
 // Agent 1 — Threat Synthesizer

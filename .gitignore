@@ -1,5 +1,6 @@
-node_modules/
-dist/
-.env
-.env.local
-*.env
+osint-agent/.venv/
+osint-agent/__pycache__/
+osint-agent/**/__pycache__/
+osint-agent/*.egg-info/
+osint-agent/dist/
+osint-agent/build/

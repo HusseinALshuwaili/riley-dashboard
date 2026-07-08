@@ -114,7 +114,7 @@ export function AnimatedBackground() {
         height: "100%",
         pointerEvents: "none",
         zIndex: 0,
-        opacity: 0.55,
+        opacity: 0.28,
       }}
     />
   );
@@ -129,10 +129,10 @@ function drawFrame(
 ) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Primary teal: hsl(172, 100%, 42%) ≈ #00d6b0
-  const PRIMARY   = { r: 0,   g: 214, b: 176 };
-  // Accent cyan: hsl(192, 100%, 50%) ≈ #00bfff
-  const ACCENT    = { r: 0,   g: 192, b: 255 };
+  // Primary purple: hsl(272, 100%, 54%) ≈ #8400ff toned down to warm grey-violet
+  const PRIMARY   = { r: 132, g: 110, b: 160 };
+  // Accent purple: rgba(132, 0, 255) — MagicBento brand
+  const ACCENT    = { r: 132, g: 0,   b: 255 };
 
   // Draw connections
   for (let i = 0; i < particles.length; i++) {
@@ -147,15 +147,13 @@ function drawFrame(
       const alpha = (1 - dist / CONNECTION_DIST) * 0.25;
       // Active node pair gets a brighter line
       const isHot = a.active || b.active;
-      const { r, g, bl } = isHot
-        ? { r: ACCENT.r, g: ACCENT.g, bl: ACCENT.b }
-        : { r: PRIMARY.r, g: PRIMARY.g, bl: PRIMARY.b };
+      const col = isHot ? ACCENT : PRIMARY;
 
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
       ctx.lineTo(b.x, b.y);
-      ctx.strokeStyle = `rgba(${r},${g},${bl},${isHot ? alpha * 1.8 : alpha})`;
-      ctx.lineWidth = isHot ? 0.7 : 0.4;
+      ctx.strokeStyle = `rgba(${col.r},${col.g},${col.b},${isHot ? alpha * 1.6 : alpha})`;
+      ctx.lineWidth = isHot ? 0.6 : 0.35;
       ctx.stroke();
     }
   }
@@ -167,23 +165,23 @@ function drawFrame(
     if (p.active) {
       // Glowing active node — outer halo
       const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 7);
-      gradient.addColorStop(0, `rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},${0.5 * pulseFactor})`);
+      gradient.addColorStop(0, `rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},${0.3 * pulseFactor})`);
       gradient.addColorStop(1, "rgba(0,0,0,0)");
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * 7, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size * 6, 0, Math.PI * 2);
       ctx.fillStyle = gradient;
       ctx.fill();
 
       // Core dot
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},${0.9 * pulseFactor})`;
+      ctx.arc(p.x, p.y, p.size * 1.4, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${ACCENT.r},${ACCENT.g},${ACCENT.b},${0.7 * pulseFactor})`;
       ctx.fill();
     } else {
       // Regular node
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(${PRIMARY.r},${PRIMARY.g},${PRIMARY.b},${0.45 * pulseFactor})`;
+      ctx.fillStyle = `rgba(${PRIMARY.r},${PRIMARY.g},${PRIMARY.b},${0.3 * pulseFactor})`;
       ctx.fill();
     }
   }

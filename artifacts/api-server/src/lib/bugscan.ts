@@ -1,7 +1,5 @@
 import { logger } from "./logger";
-
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.3-70b-versatile";
+import { callGroq } from "./agents/runtime";
 
 export interface RawFinding {
   title: string;
@@ -22,45 +20,6 @@ export interface PipelineResult {
   detectorFindings: DetectorFinding[];
   confirmedFindings: (DetectorFinding & { confirmed: boolean })[];
   debunkedCount: number;
-}
-
-async function callGroq(system: string, user: string): Promise<string> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    throw new Error("GROQ_API_KEY is not configured");
-  }
-
-  const response = await fetch(GROQ_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Groq API error (${response.status}): ${text}`);
-  }
-
-  const data = (await response.json()) as {
-    choices: { message: { content: string } }[];
-  };
-
-  const content = data.choices[0]?.message.content;
-  if (!content) {
-    throw new Error("Groq API returned an empty response");
-  }
-  return content;
 }
 
 function extractJson(text: string): unknown {

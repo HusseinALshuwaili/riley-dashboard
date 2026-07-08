@@ -6,6 +6,8 @@ import patternsRouter from "./patterns";
 import bugscanRouter from "./bugscan";
 import rileyChatRouter from "./riley-chat";
 import reconRouter from "./recon";
+import threatMapRouter from "./threat-map";
+import tier1AgentRouter from "./tier1-agent";
 
 const router: IRouter = Router();
 
@@ -16,5 +18,7 @@ router.use(patternsRouter);
 router.use(bugscanRouter);
 router.use(rileyChatRouter);
 router.use(reconRouter);
+router.use(threatMapRouter);
+router.use(tier1AgentRouter);
 
 export default router;

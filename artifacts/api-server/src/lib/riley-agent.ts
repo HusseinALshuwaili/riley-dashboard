@@ -12,28 +12,9 @@ import { db, alertsTable, bugScansTable } from "@workspace/db";
 import { runBugScanPipeline, fetchGithubFileContents } from "./bugscan";
 import { generateSyntheticAlert } from "../routes/alerts";
 import { logger } from "./logger";
+import { callGroqWithTools, type ChatMessage, type GroqToolCall } from "./agents/runtime";
 
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.3-70b-versatile";
 const MAX_ITERATIONS = 5;
-
-// ---- Types ----
-
-export interface ChatMessage {
-  role: "user" | "assistant" | "system" | "tool";
-  content: string | null;
-  tool_call_id?: string;
-  tool_calls?: GroqToolCall[];
-}
-
-interface GroqToolCall {
-  id: string;
-  type: "function";
-  function: {
-    name: string;
-    arguments: string;
-  };
-}
 
 export interface ActionRecord {
   tool: string;
@@ -427,60 +408,6 @@ async function executeTool(
   }
 }
 
-// ---- Groq API call ----
-
-async function callGroqWithTools(messages: ChatMessage[]): Promise<{
-  message: ChatMessage;
-  finishReason: string;
-}> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) throw new Error("GROQ_API_KEY is not configured");
-
-  const response = await fetch(GROQ_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages,
-      tools: TOOLS,
-      tool_choice: "auto",
-      temperature: 0.2,
-      max_tokens: 2048,
-    }),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Groq API error (${response.status}): ${text}`);
-  }
-
-  const data = (await response.json()) as {
-    choices: {
-      message: {
-        role: string;
-        content: string | null;
-        tool_calls?: GroqToolCall[];
-      };
-      finish_reason: string;
-    }[];
-  };
-
-  const choice = data.choices[0];
-  if (!choice) throw new Error("Groq returned no choices");
-
-  return {
-    message: {
-      role: "assistant",
-      content: choice.message.content,
-      tool_calls: choice.message.tool_calls,
-    },
-    finishReason: choice.finish_reason,
-  };
-}
-
 // ---- Main ReAct loop ----
 
 export async function runRileyAgent(
@@ -506,7 +433,7 @@ export async function runRileyAgent(
   while (iterations < MAX_ITERATIONS) {
     iterations++;
 
-    const { message, finishReason } = await callGroqWithTools(messages);
+    const { message, finishReason } = await callGroqWithTools(messages, TOOLS, { temperature: 0.2 });
     messages.push(message);
 
     // No more tool calls — final answer
@@ -563,7 +490,7 @@ export async function runRileyAgent(
   );
 
   try {
-    const { message: finalMessage } = await callGroqWithTools(finalMessages);
+    const { message: finalMessage } = await callGroqWithTools(finalMessages, TOOLS, { temperature: 0.2 });
     return {
       reply: finalMessage.content ?? "RILEY reached max iterations.",
       toolCallsUsed,

@@ -2,7 +2,7 @@ import { Switch, Route, Router as WouterRouter, Link, useLocation } from "wouter
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Shield, Activity, List, Play, Bug, Network, Radar, Globe, ArrowLeft } from "lucide-react";
+import { Shield, Activity, List, Play, Bug, Network, Radar, Globe, Cpu, ArrowLeft } from "lucide-react";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { RileyChat } from "@/components/RileyChat";
 import NotFound from "@/pages/not-found";
@@ -13,6 +13,8 @@ import Patterns from "@/pages/patterns";
 import BugScan from "@/pages/bugscan";
 import Recon from "@/pages/recon";
 import ThreatMap from "@/pages/threat-map";
+import Tier1 from "@/pages/tier1";
+import LandingPage from "@/pages/landing";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
@@ -25,6 +27,7 @@ function Layout({ children }: { children: React.ReactNode }) {
     { href: "/alerts", label: "Alert Queue", icon: List },
     { href: "/simulate", label: "Simulate", icon: Play },
     { href: "/patterns", label: "Patterns", icon: Network },
+    { href: "/tier1", label: "Tier 1 Agent", icon: Cpu },
     { href: "/bugscan", label: "Bug Scanner", icon: Bug },
     { href: "/recon", label: "Recon Agent", icon: Radar },
     { href: "/threat-map", label: "Threat Globe", icon: Globe },
@@ -35,54 +38,33 @@ function Layout({ children }: { children: React.ReactNode }) {
       {/* Animated particle-network background (unicorn.studio-style) */}
       <AnimatedBackground />
       {/* ── Sidebar ────────────────────────────────────────────── */}
-      <aside
-        className="w-full md:w-64 border-r border-border flex flex-col shrink-0 relative z-10"
-        style={{
-          background: "linear-gradient(180deg, hsl(228 38% 7%) 0%, hsl(228 35% 6%) 100%)",
-        }}
-      >
+      <aside className="w-full md:w-60 border-r border-border bg-card flex flex-col shrink-0 relative z-10">
         {/* Logo / Header */}
-        <div
-          className="p-6 border-b border-border flex items-center gap-3"
-          style={{
-            background: "linear-gradient(135deg, hsl(228 45% 9%) 0%, hsl(228 38% 7%) 100%)",
-          }}
-        >
+        <div className="px-5 py-5 border-b border-border flex items-center gap-3">
           <div
-            className="flex items-center justify-center w-9 h-9 rounded-lg"
-            style={{
-              background: "linear-gradient(135deg, hsl(172 100% 20%) 0%, hsl(172 100% 32%) 100%)",
-              boxShadow: "0 0 16px hsl(172 100% 42% / 0.3)",
-            }}
+            className="flex items-center justify-center w-8 h-8 rounded-md shrink-0"
+            style={{ background: "rgba(132, 0, 255, 0.15)", border: "1px solid rgba(132, 0, 255, 0.25)" }}
           >
-            <Shield className="w-5 h-5 text-primary" />
+            <Shield className="w-4 h-4" style={{ color: "hsl(272, 100%, 62%)" }} />
           </div>
           <div>
-            <h1
-              className="font-mono text-xl font-bold tracking-wider"
-              style={{
-                background: "linear-gradient(90deg, hsl(172, 100%, 52%), hsl(192, 100%, 60%))",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
+            <h1 className="text-sm font-bold tracking-[0.15em] text-foreground font-mono">
               RILEY
             </h1>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-1.5 mt-0.5">
               <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-60" style={{ background: "hsl(272, 100%, 62%)" }}></span>
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: "hsl(272, 100%, 62%)" }}></span>
               </span>
               <span className="text-[9px] font-mono text-muted-foreground uppercase tracking-widest">
-                AGENT ONLINE
+                ONLINE
               </span>
             </div>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location === item.href;
@@ -91,48 +73,34 @@ function Layout({ children }: { children: React.ReactNode }) {
                 key={item.href}
                 href={item.href}
                 className={[
-                  "flex items-center gap-3 px-4 py-3 text-sm font-mono transition-all duration-200 rounded-lg",
+                  "flex items-center gap-3 px-3 py-2.5 text-sm transition-colors duration-150 rounded-md",
                   isActive
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "text-foreground bg-secondary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
                 ].join(" ")}
                 style={
                   isActive
-                    ? {
-                        background:
-                          "linear-gradient(90deg, hsl(172 100% 42% / 0.12) 0%, transparent 100%)",
-                        borderLeft: "2px solid hsl(172, 100%, 42%)",
-                        paddingLeft: "14px",
-                        boxShadow: "0 0 20px hsl(172 100% 42% / 0.07)",
-                      }
-                    : {
-                        borderLeft: "2px solid transparent",
-                      }
+                    ? { borderLeft: "2px solid hsl(272, 100%, 54%)", paddingLeft: "10px" }
+                    : { borderLeft: "2px solid transparent" }
                 }
               >
-                <Icon
-                  className="w-4 h-4 shrink-0"
-                  style={isActive ? { filter: "drop-shadow(0 0 4px hsl(172, 100%, 42%))" } : {}}
-                />
-                {item.label}
+                <Icon className="w-4 h-4 shrink-0" />
+                <span className="text-xs font-mono tracking-wide">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
         {/* Bottom section */}
-        <div
-          className="p-4 border-t border-border space-y-3"
-          style={{ background: "hsl(228 38% 6% / 0.8)" }}
-        >
-          <a
-            href="https://riley-frontend-psi.vercel.app"
-            className="flex items-center gap-2 px-4 py-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-secondary/50"
+        <div className="p-3 border-t border-border space-y-1">
+          <Link
+            href="/landing"
+            className="flex items-center gap-2 px-3 py-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-secondary/60"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            BACK TO HOME
-          </a>
-          <p className="px-4 text-[9px] font-mono text-muted-foreground/50 tracking-wider">
+            <ArrowLeft className="w-3 h-3" />
+            HOME PAGE
+          </Link>
+          <p className="px-3 text-[9px] font-mono text-muted-foreground/40 tracking-wider">
             v1.0.0 · Riley Security
           </p>
         </div>
@@ -156,6 +124,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/bugscan": "Bug Scanner",
   "/recon": "Recon Agent",
   "/threat-map": "Threat Globe",
+  "/tier1": "Tier 1 Agent",
 };
 
 function Router() {
@@ -173,6 +142,8 @@ function Router() {
           <Route path="/bugscan" component={BugScan} />
           <Route path="/recon" component={Recon} />
           <Route path="/threat-map" component={ThreatMap} />
+          <Route path="/tier1" component={Tier1} />
+          <Route path="/landing" component={LandingPage} />
           <Route component={NotFound} />
         </Switch>
       </Layout>
