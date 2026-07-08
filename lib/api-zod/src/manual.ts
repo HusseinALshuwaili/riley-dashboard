@@ -34,6 +34,52 @@ export const RileyChatResponse = zod.object({
   iterations: zod.number(),
 });
 
+// ---- Recon Agent ----
+
+export const ReconTargetType = zod.enum(["ip", "domain", "hash", "url"]);
+
+export const ReconOsintToolResult = zod.object({
+  tool: zod.string(),
+  status: zod.enum(["ok", "error", "skipped"]),
+  data: zod.unknown().optional(),
+  error: zod.string().optional(),
+});
+
+export const ReconStartBody = zod.object({
+  target: zod.string().min(1),
+});
+
+export const ReconStartResponse = zod.object({
+  scanId: zod.number(),
+  target: zod.string(),
+  targetType: ReconTargetType,
+});
+
+export const ReconScanSummary = zod.object({
+  id: zod.number(),
+  target: zod.string(),
+  targetType: ReconTargetType,
+  status: zod.enum(["running", "completed", "failed"]),
+  riskScore: zod.number().nullable(),
+  riskLevel: zod.string().nullable(),
+  threatSummary: zod.string().nullable(),
+  durationMs: zod.number().nullable(),
+  createdAt: zod.string(),
+});
+
+export const ReconScanDetail = ReconScanSummary.extend({
+  osintData: zod.unknown().nullable(),
+  iocs: zod.array(zod.string()).nullable(),
+  mitreTechniques: zod.array(zod.string()).nullable(),
+  recommendations: zod.string().nullable(),
+  analystRationale: zod.string().nullable(),
+  errorMessage: zod.string().nullable(),
+});
+
+export const ListReconScansResponse = zod.object({
+  scans: zod.array(ReconScanSummary),
+});
+
 // ---- Bulk Alert Update ----
 
 export const BulkUpdateAlertsBody = zod.object({

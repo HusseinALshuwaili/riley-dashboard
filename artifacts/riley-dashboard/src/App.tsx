@@ -2,7 +2,7 @@ import { Switch, Route, Router as WouterRouter, Link, useLocation } from "wouter
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Shield, Activity, List, Play, Bug, Network, ArrowLeft } from "lucide-react";
+import { Shield, Activity, List, Play, Bug, Network, Radar, ArrowLeft } from "lucide-react";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { RileyChat } from "@/components/RileyChat";
 import NotFound from "@/pages/not-found";
@@ -11,6 +11,7 @@ import Alerts from "@/pages/alerts";
 import Simulate from "@/pages/simulate";
 import Patterns from "@/pages/patterns";
 import BugScan from "@/pages/bugscan";
+import Recon from "@/pages/recon";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ function Layout({ children }: { children: React.ReactNode }) {
     { href: "/simulate", label: "Simulate", icon: Play },
     { href: "/patterns", label: "Patterns", icon: Network },
     { href: "/bugscan", label: "Bug Scanner", icon: Bug },
+    { href: "/recon", label: "Recon Agent", icon: Radar },
   ];
 
   return (
@@ -150,6 +152,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/simulate": "Simulate",
   "/patterns": "Patterns",
   "/bugscan": "Bug Scanner",
+  "/recon": "Recon Agent",
 };
 
 function Router() {
@@ -165,6 +168,7 @@ function Router() {
           <Route path="/simulate" component={Simulate} />
           <Route path="/patterns" component={Patterns} />
           <Route path="/bugscan" component={BugScan} />
+          <Route path="/recon" component={Recon} />
           <Route component={NotFound} />
         </Switch>
       </Layout>
