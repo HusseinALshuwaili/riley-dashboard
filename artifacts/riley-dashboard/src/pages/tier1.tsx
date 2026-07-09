@@ -144,8 +144,8 @@ function IncidentCard({ incident }: { incident: IncidentSummary }) {
   const loadDetail = async () => {
     if (detail) return;
     try {
-      const res = await customFetch(`${API_BASE}/tier1-agent/incidents/${incident.id}`);
-      if (res.ok) setDetail(await res.json() as IncidentDetail);
+      const data = await customFetch<IncidentDetail>(`${API_BASE}/tier1-agent/incidents/${incident.id}`);
+      setDetail(data);
     } catch { /* silently fail */ }
   };
 
@@ -267,14 +267,14 @@ export default function Tier1Page() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [statusRes, runsRes, incidentsRes] = await Promise.all([
-        customFetch(`${API_BASE}/tier1-agent/status`),
-        customFetch(`${API_BASE}/tier1-agent/runs`),
-        customFetch(`${API_BASE}/tier1-agent/incidents`),
+      const [statusData, runsData, incidentsData] = await Promise.all([
+        customFetch<AgentStatus>(`${API_BASE}/tier1-agent/status`),
+        customFetch<{ runs: RunSummary[] }>(`${API_BASE}/tier1-agent/runs`),
+        customFetch<{ incidents: IncidentSummary[] }>(`${API_BASE}/tier1-agent/incidents`),
       ]);
-      if (statusRes.ok) setStatus(await statusRes.json() as AgentStatus);
-      if (runsRes.ok)   setRuns(((await runsRes.json()) as { runs: RunSummary[] }).runs);
-      if (incidentsRes.ok) setIncidents(((await incidentsRes.json()) as { incidents: IncidentSummary[] }).incidents);
+      setStatus(statusData);
+      setRuns(runsData.runs);
+      setIncidents(incidentsData.incidents);
     } catch { /* silently fail */ }
   }, []);
 
@@ -353,15 +353,9 @@ export default function Tier1Page() {
     if (loading || status?.status === "running") return;
     setLoading(true);
     try {
-      const res = await customFetch(`${API_BASE}/tier1-agent/run`, { method: "POST" });
-      if (res.ok) {
-        const { runId } = await res.json() as { runId: number };
-        connectSSE(runId);
-        void fetchAll();
-      } else {
-        const err = await res.json() as { error: string };
-        appendLog(`Error: ${err.error}`, "error");
-      }
+      const { runId } = await customFetch<{ runId: number }>(`${API_BASE}/tier1-agent/run`, { method: "POST" });
+      connectSSE(runId);
+      void fetchAll();
     } catch (e) {
       appendLog(`Error: ${String(e)}`, "error");
     } finally {

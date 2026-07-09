@@ -313,9 +313,7 @@ export default function ThreatMap() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await customFetch(`${API_BASE}/threat-map/geo-events`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = (await res.json()) as GeoEventsResponse;
+      const json = await customFetch<GeoEventsResponse>(`${API_BASE}/threat-map/geo-events`);
       setData(json);
       setError(null);
       setLastRefresh(new Date());
