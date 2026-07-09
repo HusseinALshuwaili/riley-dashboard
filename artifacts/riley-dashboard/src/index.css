@@ -51,58 +51,66 @@
 }
 
 /* ============================================================
-   RILEY SECURITY — DARK EDITORIAL THEME
-   Inspired by lium.ai — warm charcoal, minimal color, clean type
+   RILEY SECURITY — CYFOCUS-INSPIRED THREAT DASHBOARD THEME
+   Dark + high-contrast · Orange/red urgency system · Purple brand
    ============================================================ */
 
 :root, .dark {
-  /* === BASE SURFACES === */
-  --background: 40 7% 6%;          /* #0f0f0d warm near-black */
-  --foreground: 40 14% 92%;        /* #f0ede6 warm cream */
+  /* === BASE SURFACES — deep navy-black === */
+  --background: 224 20% 5%;        /* #090b12 cool near-black */
+  --foreground: 210 20% 94%;       /* #eef0f5 cool white */
 
   /* === CARD / PANEL SURFACES === */
-  --card: 40 6% 9%;                /* #171714 */
-  --card-foreground: 40 14% 92%;
-  --card-border: 40 5% 14%;        /* #252420 */
+  --card: 224 18% 8%;              /* #0e1118 */
+  --card-foreground: 210 20% 94%;
+  --card-border: 224 15% 13%;      /* #1a1e2a */
 
-  --popover: 40 6% 10%;
-  --popover-foreground: 40 14% 92%;
-  --popover-border: 40 5% 14%;
+  --popover: 224 18% 9%;
+  --popover-foreground: 210 20% 94%;
+  --popover-border: 224 15% 13%;
 
-  /* === PURPLE PRIMARY (MagicBento brand) === */
-  --primary: 272 100% 50%;         /* #8400ff */
+  /* === PURPLE PRIMARY (brand) === */
+  --primary: 272 100% 54%;         /* #8c00ff */
   --primary-foreground: 0 0% 100%;
   --primary-border: hsl(272, 100%, 38%);
 
   /* === DARK SECONDARY === */
-  --secondary: 40 5% 13%;          /* #222120 */
-  --secondary-foreground: 40 10% 68%;
-  --secondary-border: hsl(40, 5%, 18%);
+  --secondary: 224 15% 12%;        /* #17192240 */
+  --secondary-foreground: 210 12% 70%;
+  --secondary-border: hsl(224, 15%, 16%);
 
-  /* === MUTED WARM GREY === */
-  --muted: 40 5% 10%;
-  --muted-foreground: 40 6% 42%;   /* #696964 */
-  --muted-border: hsl(40, 5%, 14%);
+  /* === MUTED COOL GREY === */
+  --muted: 224 15% 9%;
+  --muted-foreground: 220 8% 45%;
+  --muted-border: hsl(224, 15%, 13%);
 
-  /* === ACCENT (warm off-white) === */
-  --accent: 40 5% 18%;
-  --accent-foreground: 40 14% 92%;
-  --accent-border: hsl(40, 5%, 22%);
+  /* === ACCENT === */
+  --accent: 224 15% 15%;
+  --accent-foreground: 210 20% 94%;
+  --accent-border: hsl(224, 15%, 20%);
 
-  /* === THREAT RED === */
-  --destructive: 350 88% 56%;
+  /* === THREAT RED (critical) === */
+  --destructive: 0 90% 56%;        /* #ef2020 */
   --destructive-foreground: 0 0% 100%;
-  --destructive-border: hsl(350, 88%, 44%);
+  --destructive-border: hsl(0, 90%, 44%);
 
   /* === STRUCTURAL === */
-  --border: 40 5% 14%;             /* #252420 */
-  --input: 40 5% 12%;
-  --ring: 272 100% 50%;
+  --border: 224 15% 13%;
+  --input: 224 15% 11%;
+  --ring: 272 100% 54%;
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: 'JetBrains Mono', monospace;
   --radius: 0.5rem;
+
+  /* ── CyFocus urgency color tokens ── */
+  --danger:   #ef4444;   /* critical — red */
+  --warning:  #f97316;   /* high — orange */
+  --caution:  #eab308;   /* medium — yellow */
+  --safe:     #22c55e;   /* low / resolved — green */
+  --info:     #3b82f6;   /* informational — blue */
+  --brand:    hsl(272 100% 54%);   /* purple brand */
 }
 
 @layer base {
@@ -115,16 +123,24 @@
 }
 
 /* ============================================================
-   SCANLINE / CRT OVERLAY — disabled in new aesthetic
-   (kept as no-op class so existing JSX doesn't break)
+   SCANLINE / MESH GRID OVERLAY — CyFocus-style subtle grid
    ============================================================ */
 @layer utilities {
   .scanline-overlay {
     position: relative;
   }
-  /* scanline removed — clean editorial look */
+  /* Subtle grid mesh — CyFocus aesthetic */
   .scanline-overlay::before {
-    display: none;
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      linear-gradient(rgba(132, 0, 255, 0.022) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(132, 0, 255, 0.022) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 120% 80% at 50% 0%, black 40%, transparent 100%);
   }
 }
 
@@ -182,17 +198,73 @@
     transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* === CARD HOVER — subtle lift only === */
+  /* === CARD HOVER — CyFocus lift + border glow === */
   .card-glow-hover {
-    transition: border-color 0.2s ease, transform 0.2s ease;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
   }
   .card-glow-hover:hover {
-    border-color: hsl(40 5% 22%) !important;
+    border-color: rgba(132, 0, 255, 0.35) !important;
     transform: translateY(-1px);
+    box-shadow: 0 0 20px rgba(132, 0, 255, 0.08);
   }
 
   /* === SIDEBAR NAV ACTIVE — left border only === */
   .nav-active-glow {
     box-shadow: inset 3px 0 0 hsl(272, 100%, 54%);
   }
+
+  /* ── CyFocus Glow Borders ── */
+  .glow-danger {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.18), 0 0 1px rgba(239, 68, 68, 0.4) inset;
+    border-color: rgba(239, 68, 68, 0.4) !important;
+  }
+  .glow-warning {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.15), 0 0 1px rgba(249, 115, 22, 0.4) inset;
+    border-color: rgba(249, 115, 22, 0.4) !important;
+  }
+  .glow-brand {
+    box-shadow: 0 0 20px rgba(132, 0, 255, 0.15), 0 0 1px rgba(132, 0, 255, 0.3) inset;
+    border-color: rgba(132, 0, 255, 0.4) !important;
+  }
+  .glow-safe {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.12), 0 0 1px rgba(34, 197, 94, 0.3) inset;
+    border-color: rgba(34, 197, 94, 0.35) !important;
+  }
+
+  /* ── Risk Heat Map cells ── */
+  .heat-none     { background: rgba(34, 197, 94, 0.08);  border-color: rgba(34, 197, 94, 0.2); }
+  .heat-low      { background: rgba(59, 130, 246, 0.1);  border-color: rgba(59, 130, 246, 0.25); }
+  .heat-medium   { background: rgba(234, 179, 8, 0.1);   border-color: rgba(234, 179, 8, 0.3); }
+  .heat-high     { background: rgba(249, 115, 22, 0.12); border-color: rgba(249, 115, 22, 0.35); }
+  .heat-critical { background: rgba(239, 68, 68, 0.14);  border-color: rgba(239, 68, 68, 0.4); }
+
+  /* ── Animated threat pulse ── */
+  @keyframes threat-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.5; transform: scale(1.5); }
+  }
+  .threat-pulse {
+    animation: threat-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .threat-pulse-slow {
+    animation: threat-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* ── CyFocus KPI card accent tops ── */
+  .kpi-danger  { border-top: 2px solid var(--danger);  }
+  .kpi-warning { border-top: 2px solid var(--warning); }
+  .kpi-safe    { border-top: 2px solid var(--safe);    }
+  .kpi-brand   { border-top: 2px solid var(--brand);   }
+  .kpi-info    { border-top: 2px solid var(--info);    }
+
+  /* ── Incident feed row ── */
+  .incident-row {
+    border-left: 3px solid transparent;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .incident-row:hover { background: rgba(132, 0, 255, 0.04); }
+  .incident-row.sev-critical { border-left-color: var(--danger); }
+  .incident-row.sev-high     { border-left-color: var(--warning); }
+  .incident-row.sev-medium   { border-left-color: var(--caution); }
+  .incident-row.sev-low      { border-left-color: var(--safe); }
 }

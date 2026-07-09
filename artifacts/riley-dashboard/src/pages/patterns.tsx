@@ -2,22 +2,27 @@ import { useListPatterns } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Network, Activity } from "lucide-react";
 
-function severityBadgeClass(sev: string) {
-  switch (sev) {
-    case "critical": return "border-destructive text-destructive bg-destructive/10";
-    case "high":     return "border-orange-500 text-orange-400 bg-orange-500/10";
-    case "medium":   return "border-yellow-500 text-yellow-400 bg-yellow-500/10";
-    default:         return "border-primary text-primary bg-primary/10";
-  }
+const SEV = {
+  critical: { color: "#ef4444", bg: "rgba(239,68,68,0.1)",  border: "rgba(239,68,68,0.35)" },
+  high:     { color: "#f97316", bg: "rgba(249,115,22,0.1)", border: "rgba(249,115,22,0.35)" },
+  medium:   { color: "#eab308", bg: "rgba(234,179,8,0.1)",  border: "rgba(234,179,8,0.3)" },
+  low:      { color: "#22c55e", bg: "rgba(34,197,94,0.08)", border: "rgba(34,197,94,0.25)" },
+} as const;
+
+type SevKey = keyof typeof SEV;
+
+function severityBadgeStyle(sev: string): React.CSSProperties {
+  const cfg = SEV[sev as SevKey] ?? SEV.low;
+  return { color: cfg.color, background: cfg.bg, borderColor: cfg.border };
 }
 
 function severityTopBorder(sev: string): React.CSSProperties {
-  switch (sev) {
-    case "critical": return { borderTop: "2px solid hsl(350, 88%, 56%)" };
-    case "high":     return { borderTop: "2px solid hsl(25, 90%, 55%)" };
-    case "medium":   return { borderTop: "2px solid hsl(45, 95%, 55%)" };
-    default:         return { borderTop: "2px solid hsl(172, 100%, 42%)" };
-  }
+  const cfg = SEV[sev as SevKey] ?? SEV.low;
+  return {
+    borderTop: `2px solid ${cfg.color}`,
+    background: "rgba(9,11,18,0.85)",
+    boxShadow: `0 -1px 20px ${cfg.bg}`,
+  };
 }
 
 export default function Patterns() {
@@ -26,10 +31,10 @@ export default function Patterns() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-mono font-bold tracking-tight text-foreground uppercase">
+        <h1 className="text-2xl font-mono font-black tracking-[0.15em] text-foreground uppercase">
           ATTACK PATTERNS
         </h1>
-        <p className="text-muted-foreground font-mono mt-2 text-sm">
+        <p className="text-[11px] font-mono text-muted-foreground/50 mt-1 tracking-widest uppercase">
           CLUSTERED ALERT CAMPAIGNS DETECTED BY RILEY
         </p>
       </div>
@@ -51,65 +56,71 @@ export default function Patterns() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {patterns.map(pattern => (
-            <Card
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {patterns.map(pattern => {
+            const cfg = SEV[pattern.severity as SevKey] ?? SEV.low;
+            return (
+            <div
               key={pattern.id}
-              className="border-border card-glow-hover overflow-hidden"
+              className="rounded-xl border card-glow-hover overflow-hidden"
               style={severityTopBorder(pattern.severity)}
             >
               {/* Header */}
-              <CardHeader
-                className="border-b border-border pb-4"
-                style={{ background: "hsl(228 32% 7% / 0.8)" }}
+              <div
+                className="px-5 py-4 border-b"
+                style={{
+                  background: `${cfg.bg}`,
+                  borderColor: "rgba(255,255,255,0.06)",
+                }}
               >
                 <div className="flex justify-between items-start gap-4">
                   <div className="min-w-0">
-                    <CardTitle className="text-base font-mono font-bold text-foreground truncate">
-                      {pattern.name}
-                    </CardTitle>
-                    <p className="text-xs font-mono text-primary mt-1 truncate">{pattern.mitreTactic}</p>
+                    <h3 className="text-sm font-mono font-bold text-foreground truncate">{pattern.name}</h3>
+                    <p className="text-[10px] font-mono mt-0.5 truncate" style={{ color: cfg.color }}>
+                      {pattern.mitreTactic}
+                    </p>
                   </div>
-                  <span className={`text-xs font-mono px-2 py-0.5 border rounded-md shrink-0 ${severityBadgeClass(pattern.severity)}`}>
+                  <span
+                    className="text-[9px] font-mono font-bold tracking-widest px-2 py-0.5 rounded border shrink-0"
+                    style={severityBadgeStyle(pattern.severity)}
+                  >
                     {pattern.severity.toUpperCase()}
                   </span>
                 </div>
-              </CardHeader>
+              </div>
 
               {/* Body */}
-              <CardContent className="p-5 space-y-5">
-                <p className="text-muted-foreground text-sm leading-relaxed">{pattern.description}</p>
+              <div className="p-5 space-y-4">
+                <p className="text-muted-foreground/70 text-xs leading-relaxed">{pattern.description}</p>
 
                 <div
-                  className="grid grid-cols-2 gap-4 pt-4 border-t border-dashed"
-                  style={{ borderColor: "hsl(var(--border))" }}
+                  className="grid grid-cols-2 gap-4 pt-4 border-t"
+                  style={{ borderColor: "rgba(255,255,255,0.06)" }}
                 >
                   <div>
-                    <span className="text-xs font-mono text-muted-foreground/60 block mb-1.5 tracking-wider uppercase">
+                    <span className="text-[9px] font-mono text-muted-foreground/40 block mb-1 tracking-widest uppercase">
                       Correlated Alerts
                     </span>
-                    <div className="flex items-center gap-2 font-mono text-xl font-bold text-foreground">
-                      <Activity
-                        className="w-4 h-4 text-primary"
-                        style={{ filter: "drop-shadow(0 0 4px hsl(172, 100%, 42%))" }}
-                      />
+                    <div className="flex items-center gap-2 font-mono text-2xl font-black" style={{ color: cfg.color }}>
+                      <Activity className="w-4 h-4 shrink-0" />
                       {pattern.alertCount}
                     </div>
                   </div>
                   <div>
-                    <span className="text-xs font-mono text-muted-foreground/60 block mb-1.5 tracking-wider uppercase">
-                      Lifespan
+                    <span className="text-[9px] font-mono text-muted-foreground/40 block mb-1 tracking-widest uppercase">
+                      Active Window
                     </span>
-                    <div className="text-xs font-mono text-muted-foreground leading-relaxed">
+                    <div className="text-[10px] font-mono text-muted-foreground/60 leading-relaxed">
                       {new Date(pattern.firstSeen).toLocaleDateString()}
-                      <span className="text-border mx-1">→</span>
+                      <span className="opacity-30 mx-1">→</span>
                       {new Date(pattern.lastSeen).toLocaleDateString()}
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            </div>
+            );
+          })}
         </div>
       )}
     </div>

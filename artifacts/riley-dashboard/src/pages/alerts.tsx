@@ -9,23 +9,30 @@ import { ShieldCheck, Check, X, Search, Loader2, Microscope } from "lucide-react
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 
+const SEV = {
+  critical: { color: "#ef4444", bg: "rgba(239,68,68,0.1)",  border: "rgba(239,68,68,0.35)" },
+  high:     { color: "#f97316", bg: "rgba(249,115,22,0.1)", border: "rgba(249,115,22,0.35)" },
+  medium:   { color: "#eab308", bg: "rgba(234,179,8,0.1)",  border: "rgba(234,179,8,0.3)" },
+  low:      { color: "#22c55e", bg: "rgba(34,197,94,0.08)", border: "rgba(34,197,94,0.25)" },
+} as const;
+
 function severityBadgeClass(sev: string) {
-  switch (sev) {
-    case "critical": return "border-destructive text-destructive bg-destructive/10";
-    case "high":     return "border-orange-500 text-orange-400 bg-orange-500/10";
-    case "medium":   return "border-yellow-500 text-yellow-400 bg-yellow-500/10";
-    default:         return "border-primary text-primary bg-primary/10";
-  }
+  const cfg = SEV[sev as keyof typeof SEV] ?? SEV.low;
+  return `border text-[9px] font-mono font-bold tracking-widest px-2 py-0.5 rounded`;
 }
 
-/** Left border glow color per severity */
+function SevBadgeStyle(sev: string): React.CSSProperties {
+  const cfg = SEV[sev as keyof typeof SEV] ?? SEV.low;
+  return { color: cfg.color, background: cfg.bg, borderColor: cfg.border };
+}
+
+/** Left border glow color per severity — CyFocus style */
 function severityBorderStyle(sev: string): React.CSSProperties {
-  switch (sev) {
-    case "critical": return { borderLeft: "3px solid hsl(350, 88%, 56%)", boxShadow: "inset 3px 0 12px hsl(350 88% 56% / 0.08)" };
-    case "high":     return { borderLeft: "3px solid hsl(25, 90%, 55%)",  boxShadow: "inset 3px 0 12px hsl(25 90% 55% / 0.07)" };
-    case "medium":   return { borderLeft: "3px solid hsl(45, 95%, 55%)",  boxShadow: "inset 3px 0 10px hsl(45 95% 55% / 0.05)" };
-    default:         return { borderLeft: "3px solid hsl(172, 100%, 42%)", boxShadow: "inset 3px 0 12px hsl(172 100% 42% / 0.08)" };
-  }
+  const cfg = SEV[sev as keyof typeof SEV] ?? SEV.low;
+  return {
+    borderLeft: `3px solid ${cfg.color}`,
+    boxShadow: `inset 3px 0 16px ${cfg.bg}`,
+  };
 }
 
 export default function Alerts() {
@@ -65,10 +72,12 @@ export default function Alerts() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-mono font-bold tracking-tight text-foreground uppercase">
+          <h1 className="text-2xl font-mono font-black tracking-[0.15em] text-foreground uppercase">
             ALERT QUEUE
           </h1>
-          <p className="text-muted-foreground font-mono mt-2 text-sm">TRIAGE PENDING SECURITY EVENTS</p>
+          <p className="text-[11px] font-mono text-muted-foreground/50 mt-1 tracking-widest uppercase">
+            TRIAGE PENDING SECURITY EVENTS
+          </p>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -118,8 +127,12 @@ export default function Alerts() {
           {alerts.map(alert => (
             <Card
               key={alert.id}
-              className="border-border transition-all duration-200 hover:bg-card/95 overflow-hidden"
-              style={severityBorderStyle(alert.severity)}
+              className="border transition-all duration-200 overflow-hidden"
+              style={{
+                ...severityBorderStyle(alert.severity),
+                background: "rgba(9,11,18,0.85)",
+                borderColor: "rgba(255,255,255,0.07)",
+              }}
             >
               <CardContent className="p-0">
                 <div className="flex flex-col lg:flex-row lg:items-stretch">
@@ -127,7 +140,10 @@ export default function Alerts() {
                   {/* Left — alert info */}
                   <div className="flex-1 p-5 space-y-3">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <span className={`text-xs font-mono px-2 py-0.5 border rounded-md ${severityBadgeClass(alert.severity)}`}>
+                      <span
+                        className={severityBadgeClass(alert.severity)}
+                        style={SevBadgeStyle(alert.severity)}
+                      >
                         {alert.severity.toUpperCase()}
                       </span>
                       <span className="font-mono text-muted-foreground text-xs">{alert.alertId}</span>
@@ -159,16 +175,19 @@ export default function Alerts() {
 
                   {/* Right — triage panel */}
                   <div
-                    className="lg:w-60 border-t lg:border-t-0 lg:border-l border-border p-5 flex flex-col justify-center gap-4"
-                    style={{ background: "hsl(228 35% 6% / 0.6)" }}
+                    className="lg:w-56 border-t lg:border-t-0 lg:border-l p-5 flex flex-col justify-center gap-4"
+                    style={{ background: "rgba(132,0,255,0.04)", borderColor: "rgba(255,255,255,0.06)" }}
                   >
                     <div className="flex flex-col items-center">
-                      <span className="text-xs font-mono text-muted-foreground/60 mb-1 tracking-wider">
+                      <span className="text-[9px] font-mono text-muted-foreground/50 mb-1 tracking-widest uppercase">
                         AI CONFIDENCE
                       </span>
                       <div
-                        className="text-2xl font-mono font-bold"
-                        style={{ color: "hsl(172, 100%, 48%)", textShadow: "0 0 12px hsl(172 100% 44% / 0.4)" }}
+                        className="text-2xl font-mono font-black"
+                        style={{
+                          color: alert.confidence > 0.8 ? "#ef4444" : alert.confidence > 0.5 ? "#f97316" : "#22c55e",
+                          textShadow: `0 0 16px currentColor`,
+                        }}
                       >
                         {(alert.confidence * 100).toFixed(0)}%
                       </div>
@@ -176,27 +195,35 @@ export default function Alerts() {
 
                     {alert.status === "pending" ? (
                       <div className="space-y-2">
-                        <Button
-                          variant="outline"
-                          className="w-full font-mono text-xs border-primary/40 text-primary hover:bg-primary hover:text-black transition-all"
+                        <button
+                          className="w-full font-mono text-[10px] tracking-widest py-2 px-3 rounded-lg border transition-all flex items-center justify-center gap-2"
+                          style={{
+                            borderColor: "rgba(239,68,68,0.35)",
+                            color: "#ef4444",
+                            background: "rgba(239,68,68,0.08)",
+                          }}
                           onClick={() => handleTriage(alert.id, "true_positive")}
                           disabled={updateStatus.isPending}
                         >
                           {updateStatus.isPending
-                            ? <Loader2 className="h-4 w-4 animate-spin" />
-                            : <Check className="h-4 w-4 mr-2" />
+                            ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            : <Check className="h-3.5 w-3.5" />
                           }
                           TRUE POSITIVE
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full font-mono text-xs border-destructive/40 text-destructive hover:bg-destructive hover:text-white transition-all"
+                        </button>
+                        <button
+                          className="w-full font-mono text-[10px] tracking-widest py-2 px-3 rounded-lg border transition-all flex items-center justify-center gap-2"
+                          style={{
+                            borderColor: "rgba(34,197,94,0.3)",
+                            color: "#22c55e",
+                            background: "rgba(34,197,94,0.06)",
+                          }}
                           onClick={() => handleTriage(alert.id, "false_positive")}
                           disabled={updateStatus.isPending}
                         >
-                          <X className="h-4 w-4 mr-2" />
+                          <X className="h-3.5 w-3.5" />
                           FALSE POSITIVE
-                        </Button>
+                        </button>
                       </div>
                     ) : (
                       <div className="text-center font-mono py-3 text-muted-foreground text-xs border border-border rounded-lg bg-secondary/30 tracking-widest">

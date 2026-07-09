@@ -9,6 +9,7 @@ import reconRouter from "./recon";
 import threatMapRouter from "./threat-map";
 import tier1AgentRouter from "./tier1-agent";
 import investigateRouter from "./investigate";
+import osintRouter from "./osint";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(reconRouter);
 router.use(threatMapRouter);
 router.use(tier1AgentRouter);
 router.use(investigateRouter);
+router.use(osintRouter);
 
 export default router;
