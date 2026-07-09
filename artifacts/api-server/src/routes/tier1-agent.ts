@@ -64,7 +64,7 @@ router.get("/tier1-agent/runs", async (_req: Request, res: Response): Promise<vo
 // ---------------------------------------------------------------------------
 
 router.get("/tier1-agent/runs/:id", async (req: Request, res: Response): Promise<void> => {
-  const id = parseInt(req.params.id ?? "", 10);
+  const id = parseInt(String(req.params.id ?? ""), 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid run ID" }); return; }
 
   const [run] = await db
@@ -91,7 +91,7 @@ router.get("/tier1-agent/runs/:id", async (req: Request, res: Response): Promise
 // ---------------------------------------------------------------------------
 
 router.get("/tier1-agent/runs/:id/stream", (req: Request, res: Response): void => {
-  const id = parseInt(req.params.id ?? "", 10);
+  const id = parseInt(String(req.params.id ?? ""), 10);
   if (isNaN(id)) { res.status(400).end(); return; }
 
   res.setHeader("Content-Type", "text/event-stream");
@@ -158,7 +158,7 @@ router.get("/tier1-agent/incidents", async (_req: Request, res: Response): Promi
 // ---------------------------------------------------------------------------
 
 router.get("/tier1-agent/incidents/:id", async (req: Request, res: Response): Promise<void> => {
-  const id = parseInt(req.params.id ?? "", 10);
+  const id = parseInt(String(req.params.id ?? ""), 10);
   if (isNaN(id)) { res.status(400).json({ error: "Invalid incident ID" }); return; }
 
   const [incident] = await db
