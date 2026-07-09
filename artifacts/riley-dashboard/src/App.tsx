@@ -2,7 +2,7 @@ import { Switch, Route, Router as WouterRouter, Link, useLocation } from "wouter
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Shield, Activity, List, Play, Bug, Network, Radar, Globe, Cpu, ArrowLeft } from "lucide-react";
+import { Shield, Activity, List, Play, Bug, Network, Radar, Globe, Cpu, ArrowLeft, Search } from "lucide-react";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { RileyChat } from "@/components/RileyChat";
 import NotFound from "@/pages/not-found";
@@ -14,6 +14,7 @@ import BugScan from "@/pages/bugscan";
 import Recon from "@/pages/recon";
 import ThreatMap from "@/pages/threat-map";
 import Tier1 from "@/pages/tier1";
+import InvestigatePage from "@/pages/investigate";
 import LandingPage from "@/pages/landing";
 import { useEffect } from "react";
 
@@ -28,6 +29,7 @@ function Layout({ children }: { children: React.ReactNode }) {
     { href: "/simulate", label: "Simulate", icon: Play },
     { href: "/patterns", label: "Patterns", icon: Network },
     { href: "/tier1", label: "Tier 1 Agent", icon: Cpu },
+    { href: "/investigate/0", label: "Investigate", icon: Search },
     { href: "/bugscan", label: "Bug Scanner", icon: Bug },
     { href: "/recon", label: "Recon Agent", icon: Radar },
     { href: "/threat-map", label: "Threat Globe", icon: Globe },
@@ -125,6 +127,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/recon": "Recon Agent",
   "/threat-map": "Threat Globe",
   "/tier1": "Tier 1 Agent",
+  "/investigate": "Investigate",
 };
 
 function Router() {
@@ -143,6 +146,7 @@ function Router() {
           <Route path="/recon" component={Recon} />
           <Route path="/threat-map" component={ThreatMap} />
           <Route path="/tier1" component={Tier1} />
+          <Route path="/investigate/:id" component={InvestigatePage} />
           <Route path="/landing" component={LandingPage} />
           <Route component={NotFound} />
         </Switch>

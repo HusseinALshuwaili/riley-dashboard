@@ -5,8 +5,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ShieldCheck, Check, X, Search, Loader2 } from "lucide-react";
+import { ShieldCheck, Check, X, Search, Loader2, Microscope } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "wouter";
 
 function severityBadgeClass(sev: string) {
   switch (sev) {
@@ -202,6 +203,15 @@ export default function Alerts() {
                         {alert.status.replace("_", " ").toUpperCase()}
                       </div>
                     )}
+                    <Link href={`/investigate/${alert.id}`}>
+                      <Button
+                        variant="ghost"
+                        className="w-full font-mono text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all border border-border/50"
+                      >
+                        <Microscope className="h-3.5 w-3.5 mr-2" />
+                        DEEP INVESTIGATE
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </CardContent>

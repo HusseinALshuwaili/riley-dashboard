@@ -8,6 +8,7 @@ import rileyChatRouter from "./riley-chat";
 import reconRouter from "./recon";
 import threatMapRouter from "./threat-map";
 import tier1AgentRouter from "./tier1-agent";
+import investigateRouter from "./investigate";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(rileyChatRouter);
 router.use(reconRouter);
 router.use(threatMapRouter);
 router.use(tier1AgentRouter);
+router.use(investigateRouter);
 
 export default router;
