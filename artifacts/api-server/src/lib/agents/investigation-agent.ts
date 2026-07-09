@@ -13,6 +13,7 @@
 import { db, alertsTable, incidentsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { callGroq } from "./runtime";
+import { retrieveRelevantTechniques, formatRagContext } from "../rag/mitre-rag";
 
 // ---------------------------------------------------------------------------
 // Output types (exported for route + frontend)
@@ -89,6 +90,11 @@ async function runMitreMapper(alert: {
   source: string;
   mitreTactic: string | null;
 }): Promise<MitreMapping> {
+  // RAG: retrieve semantically similar MITRE techniques from pgvector
+  const ragQuery = [alert.title, alert.description, alert.mitreTactic ?? ""].join(" ").trim();
+  const techniques  = await retrieveRelevantTechniques(ragQuery, 5);
+  const ragContext  = formatRagContext(techniques);
+
   const raw = await callGroq(
     `You are a MITRE ATT&CK expert. Given a security alert, map it precisely to the ATT&CK framework.
 Return ONLY valid JSON matching this exact shape:
@@ -102,12 +108,13 @@ Return ONLY valid JSON matching this exact shape:
   "evidenceNotes": string,
   "relatedTactics": string[]
 }
-Use real MITRE ATT&CK IDs (e.g. TA0001, T1566, T1566.001). Be precise.`,
+Use real MITRE ATT&CK IDs (e.g. TA0001, T1566, T1566.001). Be precise.
+${ragContext ? "Use the KNOWLEDGE BASE below to guide your selection — choose the best-matching technique based on semantic similarity to the alert." : ""}`,
     `Alert: ${alert.title}
 Description: ${alert.description}
 Severity: ${alert.severity}
 Detection Source: ${alert.source}
-Reported MITRE tactic: ${alert.mitreTactic ?? "unknown"}`,
+Reported MITRE tactic: ${alert.mitreTactic ?? "unknown"}${ragContext}`,
     { temperature: 0.1, maxTokens: 800 }
   );
   return JSON.parse(raw) as MitreMapping;
