@@ -16,6 +16,8 @@ import { db, alertsTable, agentRunsTable, incidentsTable } from "@workspace/db";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { callGroq, GROQ_FAST_MODEL } from "./runtime";
 
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
@@ -332,6 +334,13 @@ export async function runTier1AgentSweep(): Promise<number> {
         for (let i = 0; i < pendingAlerts.length; i++) {
           const alert = pendingAlerts[i];
           if (!alert) continue;
+
+          // Inter-alert cooldown — Groq free tier is 6,000 TPM on llama-3.1-8b-instant.
+          // Each alert burns ~800-1,200 tokens across 3 fast-model calls.
+          // 4 seconds between alerts keeps us well under the limit without
+          // relying solely on the per-call 429 retry in callGroq.
+          if (i > 0) await sleep(4000);
+
           try {
             const verdict = await processAlert(alert, i + 1, runId, emit);
             if (verdict === "true_positive") truePositives++;

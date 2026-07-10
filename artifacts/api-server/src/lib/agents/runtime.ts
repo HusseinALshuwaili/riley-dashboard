@@ -41,6 +41,8 @@ export async function fetchWithTimeout(
 /**
  * Call Groq with `response_format: json_object`.
  * Returns the raw JSON string from the model.
+ * Automatically retries on 429 rate-limit errors using the retry-after
+ * time from the Groq error body ("Please try again in X.XXs").
  */
 export async function callGroq(
   systemPrompt: string,
@@ -50,32 +52,48 @@ export async function callGroq(
   const key = process.env.GROQ_API_KEY;
   if (!key) throw new Error("GROQ_API_KEY not configured");
 
-  const res = await fetchWithTimeout(
-    GROQ_API_URL,
-    {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: opts.model ?? GROQ_MODEL,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user",   content: userContent  },
-        ],
-        temperature:     opts.temperature ?? 0.3,
-        max_tokens:      opts.maxTokens   ?? 1024,
-        response_format: { type: "json_object" },
-      }),
-    },
-    30000
-  );
+  const MAX_RETRIES = 4;
 
-  if (!res.ok) {
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const res = await fetchWithTimeout(
+      GROQ_API_URL,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: opts.model ?? GROQ_MODEL,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user",   content: userContent  },
+          ],
+          temperature:     opts.temperature ?? 0.3,
+          max_tokens:      opts.maxTokens   ?? 1024,
+          response_format: { type: "json_object" },
+        }),
+      },
+      30000
+    );
+
+    if (res.ok) {
+      const json = await res.json() as { choices: Array<{ message: { content: string } }> };
+      return json.choices[0]?.message?.content ?? "{}";
+    }
+
     const body = await res.text();
+
+    // On 429, parse the retry-after time from the error body and wait
+    if (res.status === 429 && attempt < MAX_RETRIES) {
+      const match = body.match(/try again in ([\d.]+)s/i);
+      const retryAfterMs = match ? Math.ceil(parseFloat(match[1]) * 1000) + 500 : (attempt + 1) * 6000;
+      console.warn(`[groq] 429 rate limit — waiting ${retryAfterMs}ms (attempt ${attempt + 1}/${MAX_RETRIES})`);
+      await new Promise(r => setTimeout(r, retryAfterMs));
+      continue;
+    }
+
     throw new Error(`Groq API error ${res.status}: ${body.slice(0, 300)}`);
   }
 
-  const json = await res.json() as { choices: Array<{ message: { content: string } }> };
-  return json.choices[0]?.message?.content ?? "{}";
+  throw new Error("Groq API: max retries exceeded after repeated rate limiting");
 }
 
 // ---------------------------------------------------------------------------
