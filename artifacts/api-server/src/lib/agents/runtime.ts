@@ -12,8 +12,9 @@
 // Constants
 // ---------------------------------------------------------------------------
 
-export const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-export const GROQ_MODEL   = "llama-3.3-70b-versatile";
+export const GROQ_API_URL    = "https://api.groq.com/openai/v1/chat/completions";
+export const GROQ_MODEL      = "llama-3.3-70b-versatile";   // deep reasoning
+export const GROQ_FAST_MODEL = "llama-3.1-8b-instant";      // classification, triage, quick tasks
 
 // ---------------------------------------------------------------------------
 // Shared fetch utility
@@ -44,7 +45,7 @@ export async function fetchWithTimeout(
 export async function callGroq(
   systemPrompt: string,
   userContent: string,
-  opts: { temperature?: number; maxTokens?: number } = {}
+  opts: { temperature?: number; maxTokens?: number; model?: string } = {}
 ): Promise<string> {
   const key = process.env.GROQ_API_KEY;
   if (!key) throw new Error("GROQ_API_KEY not configured");
@@ -55,7 +56,7 @@ export async function callGroq(
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: GROQ_MODEL,
+        model: opts.model ?? GROQ_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user",   content: userContent  },
@@ -111,7 +112,7 @@ export interface GroqTool {
 export async function callGroqWithTools(
   messages: ChatMessage[],
   tools: GroqTool[],
-  opts: { temperature?: number; maxTokens?: number } = {}
+  opts: { temperature?: number; maxTokens?: number; model?: string } = {}
 ): Promise<{ message: ChatMessage; finishReason: string }> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error("GROQ_API_KEY is not configured");
@@ -120,7 +121,7 @@ export async function callGroqWithTools(
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify({
-      model:       GROQ_MODEL,
+      model:       opts.model ?? GROQ_MODEL,
       messages,
       tools,
       tool_choice: "auto",

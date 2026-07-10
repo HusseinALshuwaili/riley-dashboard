@@ -12,7 +12,7 @@ import { db, alertsTable, bugScansTable } from "@workspace/db";
 import { runBugScanPipeline, fetchGithubFileContents } from "./bugscan";
 import { generateSyntheticAlert } from "../routes/alerts";
 import { logger } from "./logger";
-import { callGroqWithTools, type ChatMessage, type GroqToolCall } from "./agents/runtime";
+import { callGroqWithTools, GROQ_FAST_MODEL, type ChatMessage, type GroqToolCall } from "./agents/runtime";
 
 const MAX_ITERATIONS = 5;
 
@@ -433,7 +433,7 @@ export async function runRileyAgent(
   while (iterations < MAX_ITERATIONS) {
     iterations++;
 
-    const { message, finishReason } = await callGroqWithTools(messages, TOOLS, { temperature: 0.2 });
+    const { message, finishReason } = await callGroqWithTools(messages, TOOLS, { temperature: 0.2, model: GROQ_FAST_MODEL });
     messages.push(message);
 
     // No more tool calls — final answer
@@ -490,7 +490,7 @@ export async function runRileyAgent(
   );
 
   try {
-    const { message: finalMessage } = await callGroqWithTools(finalMessages, TOOLS, { temperature: 0.2 });
+    const { message: finalMessage } = await callGroqWithTools(finalMessages, TOOLS, { temperature: 0.2, model: GROQ_FAST_MODEL });
     return {
       reply: finalMessage.content ?? "RILEY reached max iterations.",
       toolCallsUsed,

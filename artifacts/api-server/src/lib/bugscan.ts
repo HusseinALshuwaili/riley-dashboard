@@ -1,5 +1,5 @@
 import { logger } from "./logger";
-import { callGroq } from "./agents/runtime";
+import { callGroq, GROQ_FAST_MODEL } from "./agents/runtime";
 
 export interface RawFinding {
   title: string;
@@ -42,6 +42,7 @@ export async function runBugScanPipeline(
   const analyzerRaw = await callGroq(
     `You are Analyzer, the first agent in a 3-agent adversarial code security pipeline (Analyzer -> Detector -> Debunker). Read the provided ${language} code and produce a concise structural and behavioral summary: what it does, its inputs/outputs, external calls, and any notable risk surfaces. Respond ONLY with JSON: {"summary": string}.`,
     code,
+    { model: GROQ_FAST_MODEL },
   );
   const analyzerParsed = extractJson(analyzerRaw) as { summary?: string };
   const analyzerNotes = analyzerParsed.summary ?? "Analyzer produced no summary.";

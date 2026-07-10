@@ -14,7 +14,7 @@
 import EventEmitter from "events";
 import { db, alertsTable, agentRunsTable, incidentsTable } from "@workspace/db";
 import { eq, desc, and, sql } from "drizzle-orm";
-import { callGroq } from "./runtime";
+import { callGroq, GROQ_FAST_MODEL } from "./runtime";
 
 // ---------------------------------------------------------------------------
 // State
@@ -75,7 +75,7 @@ Source: ${alert.source}
 Confidence: ${alert.confidence}
 Asset: ${alert.assetName}
 MITRE Tactic: ${alert.mitreTactic ?? "unknown"}`,
-    { temperature: 0.2 }
+    { temperature: 0.2, model: GROQ_FAST_MODEL }
   );
   return JSON.parse(raw) as AnalyzerOutput;
 }
@@ -108,7 +108,7 @@ Analyzer: ${analyzerOutput.threatContext} | Technique: ${analyzerOutput.attackTe
 
 Recent alerts (last 24h):
 ${ctx || "No recent alerts from same asset/tactic."}`,
-    { temperature: 0.2 }
+    { temperature: 0.2, model: GROQ_FAST_MODEL }
   );
   return JSON.parse(raw) as InvestigatorOutput;
 }

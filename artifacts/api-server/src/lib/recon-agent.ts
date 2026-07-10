@@ -16,7 +16,7 @@ import EventEmitter from "events";
 import { spawn } from "child_process";
 import { db, reconScansTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { callGroq, fetchWithTimeout } from "./agents/runtime";
+import { callGroq, fetchWithTimeout, GROQ_FAST_MODEL } from "./agents/runtime";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -560,7 +560,7 @@ ${osintSummary}
 
 Synthesize all data into threat intelligence. List concrete indicators of compromise, techniques, and findings.`;
 
-  const raw = await callGroq(system, user);
+  const raw = await callGroq(system, user, { model: GROQ_FAST_MODEL });
   return JSON.parse(raw) as SynthesizerOutput;
 }
 
