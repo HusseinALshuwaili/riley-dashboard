@@ -10,6 +10,7 @@ import threatMapRouter from "./threat-map";
 import tier1AgentRouter from "./tier1-agent";
 import investigateRouter from "./investigate";
 import osintRouter from "./osint";
+import waitlistRouter from "./waitlist";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(threatMapRouter);
 router.use(tier1AgentRouter);
 router.use(investigateRouter);
 router.use(osintRouter);
+router.use(waitlistRouter);
 
 export default router;

@@ -176,7 +176,7 @@ function RiskScoreHero({
 // ── Main page ────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
-  const { data: summary, isLoading } = useGetDashboardSummary();
+  const { data: summary, isLoading, error } = useGetDashboardSummary();
   const { data: alerts } = useListAlerts();
   const { data: patterns } = useListPatterns();
 
@@ -253,6 +253,25 @@ export default function Dashboard() {
     document.body.appendChild(link); link.click();
     document.body.removeChild(link); URL.revokeObjectURL(url);
   }, [alerts]);
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-mono font-black tracking-[0.15em] uppercase">DASHBOARD</h1>
+        <div className="rounded-xl p-6" style={{ background: "rgba(249,115,22,0.05)", border: "1px solid rgba(249,115,22,0.15)" }}>
+          <p className="text-sm font-mono" style={{ color: "rgba(249,115,22,0.9)" }}>
+            ⚡ API server unreachable — check Render environment variables.
+          </p>
+          <p className="text-xs font-mono mt-2" style={{ color: "rgba(180,185,200,0.4)" }}>
+            Required: DATABASE_URL · GROQ_API_KEY · JINA_API_KEY
+          </p>
+          <p className="text-xs font-mono mt-4" style={{ color: "rgba(180,185,200,0.25)" }}>
+            Dashboard will auto-reconnect when the server comes back online.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading || !summary) {
     return (

@@ -1,14 +1,17 @@
 /**
  * Riley Security — Marketing Landing Page
- * Style: lium.ai inspired — dark editorial, large type, MagicBento features grid
+ * Dark editorial aesthetic, lium.ai inspired.
+ * Includes: hero, stats, challenge, features bento, pricing, waitlist CTA, footer
  */
 
-import { useEffect } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "wouter";
 import MagicBento from "@/components/MagicBento";
 
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? "/api";
+
 // ---------------------------------------------------------------------------
-// Inline styles (isolated from dashboard Tailwind)
+// Inline styles
 // ---------------------------------------------------------------------------
 
 const s = {
@@ -138,9 +141,7 @@ const s = {
     paddingRight: "32px",
     paddingLeft: "32px",
   },
-  statFirst: {
-    paddingLeft: 0,
-  },
+  statFirst: { paddingLeft: 0 },
   statVal: {
     fontSize: "32px",
     fontWeight: 800,
@@ -188,14 +189,13 @@ const s = {
     margin: "0 0 48px",
   },
 
-  // Challenge / Solution two-col
+  // Two-col
   twoCol: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
     gap: "64px",
     alignItems: "start",
   },
-  twoColLeft: {},
   twoColRight: {
     display: "flex",
     flexDirection: "column" as const,
@@ -243,7 +243,7 @@ const s = {
     marginBottom: "8px",
   },
 
-  // Security section
+  // Security grid
   securityGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
@@ -278,8 +278,128 @@ const s = {
     lineHeight: 1.55,
   },
 
-  // CTA
-  ctaSection: {
+  // Pricing
+  pricingGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(3, 1fr)",
+    gap: "16px",
+    marginTop: "40px",
+  },
+  pricingCard: {
+    padding: "32px",
+    background: "#141412",
+    border: "1px solid #1e1e1c",
+    borderRadius: "12px",
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "0",
+  },
+  pricingCardHighlight: {
+    padding: "32px",
+    background: "rgba(132,0,255,0.07)",
+    border: "1px solid rgba(132,0,255,0.3)",
+    borderRadius: "12px",
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "0",
+    position: "relative" as const,
+  },
+  pricingBadge: {
+    position: "absolute" as const,
+    top: "-12px",
+    left: "32px",
+    fontSize: "10px",
+    letterSpacing: "0.12em",
+    textTransform: "uppercase" as const,
+    background: "rgba(132,0,255,0.9)",
+    color: "#fff",
+    padding: "3px 10px",
+    borderRadius: "4px",
+    fontWeight: 700,
+  },
+  pricingName: {
+    fontSize: "12px",
+    letterSpacing: "0.14em",
+    textTransform: "uppercase" as const,
+    color: "#696964",
+    fontWeight: 600,
+    marginBottom: "16px",
+  },
+  pricingPrice: {
+    fontSize: "40px",
+    fontWeight: 800,
+    letterSpacing: "-0.04em",
+    color: "#f0ede6",
+    lineHeight: 1,
+  },
+  pricingPeriod: {
+    fontSize: "14px",
+    color: "#696964",
+    fontWeight: 400,
+    marginLeft: "4px",
+  },
+  pricingDesc: {
+    fontSize: "13px",
+    color: "#696964",
+    lineHeight: 1.55,
+    marginTop: "12px",
+    marginBottom: "24px",
+    paddingBottom: "24px",
+    borderBottom: "1px solid #1e1e1c",
+  },
+  pricingFeatures: {
+    listStyle: "none",
+    margin: "0 0 32px",
+    padding: 0,
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "10px",
+    flex: 1,
+  },
+  pricingFeature: {
+    fontSize: "13px",
+    color: "#969690",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
+  pricingCheck: {
+    width: "14px",
+    height: "14px",
+    borderRadius: "50%",
+    background: "rgba(132,0,255,0.15)",
+    border: "1px solid rgba(132,0,255,0.4)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    fontSize: "9px",
+    color: "rgba(180,120,255,0.9)",
+  },
+  pricingCta: {
+    display: "block",
+    textAlign: "center" as const,
+    padding: "11px 0",
+    borderRadius: "6px",
+    fontSize: "13px",
+    fontWeight: 700,
+    textDecoration: "none",
+    letterSpacing: "0.03em",
+    cursor: "pointer",
+  },
+  pricingCtaDefault: {
+    background: "#1e1e1c",
+    color: "#f0ede6",
+    border: "1px solid #363630",
+  },
+  pricingCtaHighlight: {
+    background: "#8400ff",
+    color: "#fff",
+    border: "none",
+  },
+
+  // Waitlist form
+  waitlistSection: {
     maxWidth: "1100px",
     margin: "0 auto",
     padding: "100px 48px",
@@ -288,7 +408,7 @@ const s = {
     alignItems: "center",
     textAlign: "center" as const,
   },
-  ctaH2: {
+  waitlistH2: {
     fontSize: "clamp(2rem, 4.5vw, 4.5rem)",
     fontWeight: 800,
     letterSpacing: "-0.04em",
@@ -297,18 +417,50 @@ const s = {
     margin: "0 0 20px",
     maxWidth: "700px",
   },
-  ctaSub: {
+  waitlistSub: {
     fontSize: "15px",
     color: "#696964",
     lineHeight: 1.65,
     maxWidth: "480px",
-    margin: "0 0 36px",
+    margin: "0 0 40px",
   },
-  ctaBtns: {
+  waitlistForm: {
     display: "flex",
-    gap: "16px",
-    alignItems: "center",
-    justifyContent: "center",
+    gap: "10px",
+    maxWidth: "440px",
+    width: "100%",
+  },
+  waitlistInput: {
+    flex: 1,
+    padding: "11px 16px",
+    background: "#141412",
+    border: "1px solid #363630",
+    borderRadius: "6px",
+    color: "#f0ede6",
+    fontSize: "14px",
+    outline: "none",
+    fontFamily: "inherit",
+  },
+  waitlistBtn: {
+    padding: "11px 24px",
+    background: "#f0ede6",
+    color: "#0c0c0a",
+    border: "none",
+    borderRadius: "6px",
+    fontSize: "13px",
+    fontWeight: 700,
+    cursor: "pointer",
+    letterSpacing: "0.02em",
+    fontFamily: "inherit",
+    whiteSpace: "nowrap" as const,
+  },
+  waitlistSuccess: {
+    fontSize: "14px",
+    color: "#22c55e",
+    background: "rgba(34,197,94,0.08)",
+    border: "1px solid rgba(34,197,94,0.2)",
+    borderRadius: "8px",
+    padding: "12px 24px",
   },
 
   // Footer
@@ -335,10 +487,77 @@ const s = {
 };
 
 // ---------------------------------------------------------------------------
+// Pricing tiers
+// ---------------------------------------------------------------------------
+
+const TIERS = [
+  {
+    name: "Starter",
+    price: "Free",
+    period: "",
+    desc: "Perfect for solo analysts and small teams evaluating autonomous SOC.",
+    features: [
+      "100 alerts / month",
+      "Riley AI chat assistant",
+      "Bug scanner (3-agent pipeline)",
+      "Threat map visualization",
+      "1 workspace",
+    ],
+    cta: "Open dashboard",
+    ctaHref: "/",
+    ctaExternal: false,
+    highlight: false,
+  },
+  {
+    name: "Pro",
+    price: "$99",
+    period: "/ mo",
+    desc: "Full autonomous SOC coverage for growing security teams.",
+    features: [
+      "Unlimited alerts",
+      "Tier 1 autonomous agent (24/7)",
+      "OSINT + Recon intelligence",
+      "Attack pattern clustering",
+      "Incident runbooks with remediation",
+      "5 workspaces",
+    ],
+    cta: "Join waitlist",
+    ctaHref: "#waitlist",
+    ctaExternal: false,
+    highlight: true,
+    badge: "Most popular",
+  },
+  {
+    name: "Enterprise",
+    price: "Custom",
+    period: "",
+    desc: "Dedicated infrastructure, SLAs, and custom integrations for large teams.",
+    features: [
+      "Everything in Pro",
+      "Dedicated Render instance",
+      "Custom SIEM integrations",
+      "SSO / SAML auth",
+      "99.9% uptime SLA",
+      "Dedicated support channel",
+    ],
+    cta: "Contact us",
+    ctaHref: "mailto:husseinallshuwaili@gmail.com?subject=Riley%20Enterprise%20Inquiry",
+    ctaExternal: true,
+    highlight: false,
+  },
+];
+
+// ---------------------------------------------------------------------------
 // Landing Page
 // ---------------------------------------------------------------------------
 
 export default function LandingPage() {
+  const [email, setEmail] = useState("");
+  const [plan, setPlan] = useState<"starter" | "pro" | "enterprise">("pro");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+
   // Inject Inter font
   useEffect(() => {
     if (!document.querySelector('link[data-riley-font]')) {
@@ -350,6 +569,29 @@ export default function LandingPage() {
     }
   }, []);
 
+  const handleWaitlist = async (e: FormEvent, planOverride?: "starter" | "pro" | "enterprise") => {
+    e.preventDefault();
+    if (!email || submitting) return;
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const res = await fetch(`${API_BASE}/waitlist`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, plan: planOverride ?? plan, source: "landing" }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({})) as { error?: string };
+        throw new Error(err.error ?? "Signup failed");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div style={s.root}>
 
@@ -358,10 +600,10 @@ export default function LandingPage() {
         <div style={s.navLogo}>RILEY</div>
         <div style={s.navLinks}>
           <a href="#features" style={s.navLink}>Agents</a>
+          <a href="#pricing" style={s.navLink}>Pricing</a>
           <a href="#security" style={s.navLink}>Security</a>
-          <a href="#challenge" style={s.navLink}>How it works</a>
           <Link href="/" style={s.navLink}>Dashboard →</Link>
-          <Link href="/" style={s.navCta}>Get started</Link>
+          <a href="#waitlist" style={s.navCta}>Get started</a>
         </div>
       </nav>
 
@@ -378,8 +620,8 @@ export default function LandingPage() {
         </p>
         <div style={s.heroBtns}>
           <Link href="/" style={s.heroBtnPrimary}>Open dashboard</Link>
-          <a href="#features" style={s.heroBtnGhost}>
-            See how it works <span>→</span>
+          <a href="#pricing" style={s.heroBtnGhost}>
+            See pricing <span>→</span>
           </a>
         </div>
       </section>
@@ -392,7 +634,14 @@ export default function LandingPage() {
           { val: "4",     label: "Specialized AI agents" },
           { val: "24/7",  label: "Autonomous coverage" },
         ].map(({ val, label }, i) => (
-          <div key={i} style={{ ...s.stat, ...(i === 0 ? s.statFirst : {}), ...(i === 3 ? { borderRight: "none" } : {}) }}>
+          <div
+            key={i}
+            style={{
+              ...s.stat,
+              ...(i === 0 ? s.statFirst : {}),
+              ...(i === 3 ? { borderRight: "none" } : {}),
+            }}
+          >
             <div style={s.statVal}>{val}</div>
             <div style={s.statLabel}>{label}</div>
           </div>
@@ -403,7 +652,7 @@ export default function LandingPage() {
       <section id="challenge" style={s.section}>
         <span style={s.sectionLabel}>The Challenge</span>
         <div style={s.twoCol}>
-          <div style={s.twoColLeft}>
+          <div>
             <h2 style={s.sectionH2}>
               Your most critical incidents shouldn't sit in a pending queue.
             </h2>
@@ -456,7 +705,7 @@ export default function LandingPage() {
         />
       </section>
 
-      {/* ── Security section ────────────────────────────── */}
+      {/* ── Security ────────────────────────────────────── */}
       <section id="security" style={s.section}>
         <span style={s.sectionLabel}>Security & Privacy</span>
         <h2 style={s.sectionH2}>Enterprise-grade. Private by design.</h2>
@@ -466,12 +715,12 @@ export default function LandingPage() {
         </p>
         <div style={s.securityGrid}>
           {[
-            { label: "Data", title: "Your data stays yours", desc: "Riley does not train on your security data. Every alert and incident remains in your Neon database." },
-            { label: "Auth", title: "End-to-end encryption", desc: "All API traffic is TLS. Database credentials are stored as environment variables, never committed." },
-            { label: "Access", title: "Controlled access", desc: "Role-based permissions across teams. Audit logs for every agent action and alert status change." },
-            { label: "Keys", title: "Zero hardcoded secrets", desc: "API keys for Groq, VirusTotal, Shodan, and AbuseIPDB are transient env vars on Render — never in source." },
-            { label: "Agents", title: "Adversarial by design", desc: "The Verdict agent actively challenges the Analyzer and Investigator to prevent false positives from reaching incident status." },
-            { label: "Ops", title: "No downtime SLA", desc: "Autonomous cron sweeps continue independently of your analyst team. No manual intervention required." },
+            { label: "Data",    title: "Your data stays yours",      desc: "Riley does not train on your security data. Every alert and incident remains in your Neon database." },
+            { label: "Auth",    title: "End-to-end encryption",      desc: "All API traffic is TLS. Database credentials are stored as environment variables, never committed." },
+            { label: "Access",  title: "Controlled access",          desc: "Role-based permissions across teams. Audit logs for every agent action and alert status change." },
+            { label: "Keys",    title: "Zero hardcoded secrets",     desc: "API keys for Groq, VirusTotal, Shodan, and AbuseIPDB are transient env vars on Render — never in source." },
+            { label: "Agents",  title: "Adversarial by design",      desc: "The Verdict agent actively challenges the Analyzer and Investigator to prevent false positives reaching incident status." },
+            { label: "Ops",     title: "Always-on coverage",         desc: "Autonomous cron sweeps continue independently of your analyst team. No manual intervention required." },
           ].map((card, i) => (
             <div key={i} style={s.secCard}>
               <span style={s.secCardLabel}>{card.label}</span>
@@ -482,28 +731,118 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA ─────────────────────────────────────────── */}
-      <section style={s.ctaSection}>
-        <h2 style={s.ctaH2}>
-          Ask Riley anything.<br />It answers with evidence.
-        </h2>
-        <p style={s.ctaSub}>
-          Every alert. Every incident. Every IOC. Riley correlates, triages,
-          and remediates — then explains its reasoning.
+      {/* ── Pricing ─────────────────────────────────────── */}
+      <section id="pricing" style={s.section}>
+        <span style={s.sectionLabel}>Pricing</span>
+        <h2 style={s.sectionH2}>Simple, transparent pricing.</h2>
+        <p style={s.sectionSub}>
+          Start free with the dashboard. Upgrade to Pro when you need
+          autonomous triage and intelligence — no sales call required.
         </p>
-        <div style={s.ctaBtns}>
-          <Link href="/" style={s.heroBtnPrimary}>Open dashboard</Link>
-          <Link href="/tier1" style={{ ...s.heroBtnGhost, color: "#696964" }}>
-            View Tier 1 agent →
-          </Link>
+        <div style={s.pricingGrid}>
+          {TIERS.map((tier) => {
+            const cardStyle = tier.highlight ? s.pricingCardHighlight : s.pricingCard;
+            return (
+              <div key={tier.name} style={cardStyle}>
+                {tier.highlight && "badge" in tier && (
+                  <div style={s.pricingBadge}>{tier.badge}</div>
+                )}
+                <div style={s.pricingName}>{tier.name}</div>
+                <div>
+                  <span style={s.pricingPrice}>{tier.price}</span>
+                  {tier.period && <span style={s.pricingPeriod}>{tier.period}</span>}
+                </div>
+                <div style={s.pricingDesc}>{tier.desc}</div>
+                <ul style={s.pricingFeatures}>
+                  {tier.features.map((f) => (
+                    <li key={f} style={s.pricingFeature}>
+                      <span style={s.pricingCheck}>✓</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                {tier.ctaExternal ? (
+                  <a
+                    href={tier.ctaHref}
+                    style={{
+                      ...s.pricingCta,
+                      ...(tier.highlight ? s.pricingCtaHighlight : s.pricingCtaDefault),
+                    }}
+                  >
+                    {tier.cta}
+                  </a>
+                ) : tier.ctaHref.startsWith("#") ? (
+                  <a
+                    href={tier.ctaHref}
+                    onClick={() => setPlan(tier.name.toLowerCase() as "starter" | "pro" | "enterprise")}
+                    style={{
+                      ...s.pricingCta,
+                      ...(tier.highlight ? s.pricingCtaHighlight : s.pricingCtaDefault),
+                    }}
+                  >
+                    {tier.cta}
+                  </a>
+                ) : (
+                  <Link
+                    href={tier.ctaHref}
+                    style={{
+                      ...s.pricingCta,
+                      ...(tier.highlight ? s.pricingCtaHighlight : s.pricingCtaDefault),
+                    }}
+                  >
+                    {tier.cta}
+                  </Link>
+                )}
+              </div>
+            );
+          })}
         </div>
+      </section>
+
+      {/* ── Waitlist CTA ────────────────────────────────── */}
+      <section id="waitlist" style={s.waitlistSection}>
+        <span style={{ ...s.heroLabel, marginBottom: "16px" }}>Early access</span>
+        <h2 style={s.waitlistH2}>
+          Be the first to try<br />Riley Pro.
+        </h2>
+        <p style={s.waitlistSub}>
+          Pro is launching soon. Drop your email and we'll reach out when
+          your spot is ready — no credit card required.
+        </p>
+        {submitted ? (
+          <div style={s.waitlistSuccess}>
+            ✓ You're on the list — we'll be in touch soon.
+          </div>
+        ) : (
+          <form onSubmit={handleWaitlist} style={s.waitlistForm}>
+            <input
+              type="email"
+              placeholder="you@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={s.waitlistInput}
+            />
+            <button type="submit" disabled={submitting} style={s.waitlistBtn}>
+              {submitting ? "Joining…" : "Join waitlist"}
+            </button>
+          </form>
+        )}
+        {submitError && (
+          <p style={{ fontSize: "13px", color: "#f97316", marginTop: "12px" }}>
+            {submitError}
+          </p>
+        )}
+        <p style={{ fontSize: "12px", color: "#363630", marginTop: "16px" }}>
+          No spam. One email when Pro launches.
+        </p>
       </section>
 
       {/* ── Footer ──────────────────────────────────────── */}
       <footer style={{ borderTop: "1px solid #1e1e1c" }}>
         <div style={s.footer}>
           <div style={s.footerLogo}>RILEY</div>
-          <div style={s.footerRight}>© 2026 Riley Security · Built with Groq LLaMA-3.3-70b</div>
+          <div style={s.footerRight}>© 2026 Riley Security · Powered by Groq LLaMA</div>
         </div>
       </footer>
 

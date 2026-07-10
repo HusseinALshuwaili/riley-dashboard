@@ -39,7 +39,7 @@ export default function Alerts() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
 
-  const { data: alerts, isLoading } = useListAlerts({
+  const { data: alerts, isLoading, error } = useListAlerts({
     search: search || undefined,
     status: status !== "all" ? status as any : undefined,
   });
@@ -66,6 +66,20 @@ export default function Alerts() {
       }
     );
   };
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-mono font-black tracking-[0.15em] text-foreground uppercase">ALERT QUEUE</h1>
+        <div className="rounded-lg p-6" style={{ background: "rgba(249,115,22,0.05)", border: "1px solid rgba(249,115,22,0.15)" }}>
+          <p className="text-sm font-mono" style={{ color: "rgba(249,115,22,0.9)" }}>⚡ Could not load alerts — API server may be offline.</p>
+          <p className="text-xs font-mono mt-2" style={{ color: "rgba(180,185,200,0.4)" }}>
+            Check that DATABASE_URL and GROQ_API_KEY are set on Render, then refresh.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -3,3 +3,4 @@ export * from "./bugScans";
 export * from "./reconScans";
 export * from "./agentRuns";
 export * from "./incidents";
+export * from "./waitlist";

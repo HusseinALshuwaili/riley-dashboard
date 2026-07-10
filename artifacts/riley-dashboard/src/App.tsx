@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Shield, Activity, List, Play, Bug, Network, Radar, Globe, Cpu, ArrowLeft, Search, Eye } from "lucide-react";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { RileyChat } from "@/components/RileyChat";
+import { ErrorBoundary, OfflineBanner } from "@/components/ErrorBoundary";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Alerts from "@/pages/alerts";
@@ -17,7 +18,9 @@ import Tier1 from "@/pages/tier1";
 import InvestigatePage from "@/pages/investigate";
 import OsintPage from "@/pages/osint";
 import LandingPage from "@/pages/landing";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
+
+const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? "/api";
 
 const queryClient = new QueryClient();
 
@@ -214,17 +217,35 @@ function Router() {
 }
 
 function App() {
+  const [apiOffline, setApiOffline] = useState(false);
+
+  const checkHealth = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(5000) });
+      setApiOffline(!res.ok);
+    } catch {
+      setApiOffline(true);
+    }
+  }, []);
+
   useEffect(() => {
     document.documentElement.classList.add('dark');
-  }, []);
+    // Health check on mount then every 60s
+    void checkHealth();
+    const id = setInterval(() => { void checkHealth(); }, 60_000);
+    return () => clearInterval(id);
+  }, [checkHealth]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
+          <ErrorBoundary>
+            <Router />
+          </ErrorBoundary>
         </WouterRouter>
         <Toaster />
+        <OfflineBanner show={apiOffline} />
       </TooltipProvider>
     </QueryClientProvider>
   );
